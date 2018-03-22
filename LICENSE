@@ -1,3 +1,8 @@
+The folder pyvotecore is a fork of the GPLv3 project https://github.com/bradbeattie/python-vote-core
+You are thus required to release changes made to pyvotecore public under GPLv3
+Please read pyvotecore/LICENSE.txt for more informations
+The license below applies to all other files (i.e. except those found in the pyvotecore folder).
+
                    GNU LESSER GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
