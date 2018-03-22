@@ -12,7 +12,7 @@ if __name__ == "__main__":
     only_subset = True # calculate joined ranking over defined subsets instead of all available rankings
     name_joined_rank = "joined_"+dc.rank_prefix
     all_sources = dc.get_all_sources_rob18()
-    #all_sources = [("depth", [dc.sorting_kitti_depth()])]#, dc.sorting_eth3d_mvs()])]#, dc.sorting_middlb_stereov3(), dc.sorting_kitti2012_stereo(), dc.sorting_kitti2015_stereo()])]
+    #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow()])]
     
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                       
             rclogger.info("Calculating joined ranking for subset "+name)
             joined_ranking = get_joined_ranking(filtered_vals, dc.column_id, subset_ranking_names, batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = {}, rclogger = rclogger)
-             # Balance the influence of each dataset (sum of wheights per dataset are the same)
+            # Balance the influence of each dataset (sum of wheights per dataset are the same)
             # wheights = dc.calc_weight_per_benchmark(all_rankings, sources)
             # joined_ranking = get_joined_ranking(list(filtered_vals.values()), dc.column_id, all_rankings,  batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = wheights, rclogger = rclogger)
                         
@@ -104,17 +104,15 @@ if __name__ == "__main__":
                 rclogger.warning("Skipping calculations for subset "+name+" as no overall joined ranking could be calculated.")
                 continue 
             
-            overall_res_file_tmp = tmp_dir + "/ranked_full_%s.csv" % name
-            dc.save_as_csv(header_list, joined_ranking, filtered_vals, overall_res_file_tmp, order_name=name_joined_rank)
-            merge_csv_files.append(overall_res_file_tmp)
+            filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, name_joined_rank, joined_ranking)
+            overall_res_file = res_dir + "/ranked_full_%s.csv" % name
+            dc.save_as_csv([name_joined_rank]+header_list, joined_ranking, filtered_vals, overall_res_file)
+            merge_csv_files.append(overall_res_file)
             
             #this file is a condensed version having the overall joined ranks and the individual joined ranks per dataset
-            condensed_vals = dc.join_csv_files(merge_csv_files, dc.column_id)
             condensed_res_file = res_dir + "/ranked_condensed_%s.csv" % name
-            #these two lines overwrite existing result files; thus they are executed last (only if no error occured)
-            dc.save_as_csv([name_joined_rank,dc.column_id]+subset_ranking_names, joined_ranking, condensed_vals, condensed_res_file, order_name=None)
-            overall_res_file = res_dir + "/ranked_full_%s.csv" % name
-            shutil.copy(overall_res_file_tmp, overall_res_file)
+            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names, joined_ranking, filtered_vals, condensed_res_file)
+            
         except  Exception as e:
             rclogger.error("Skipping calculations for subset "+name+"; Exception: "+str(e))
             continue 
@@ -126,7 +124,8 @@ if __name__ == "__main__":
     if not archive_dir is None:
         #archive all artifacts
         try:
-            archive_name = os.path.join(archive_dir,tmp_dir.split('/')[-1])
+            tmp_name = tmp_dir.replace('\\','/').split('/')[-1]
+            archive_name = os.path.join(archive_dir,tmp_name)
             for r in result_files:
                 shutil.copy2(r,tmp_dir)
             archive_ext = "zip"
