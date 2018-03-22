@@ -6,13 +6,13 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     #Parameters changing way that multi-ranking is applied
-    read_only =  1#0: fetch online data, calc csv and multi-ranks, 1: only calc csv and multi-ranks, 2: only calc multi-ranks
+    read_only = 0 #0: fetch online data, calc csv and multi-ranks, 1: only calc csv and multi-ranks, 2: only calc multi-ranks
     batchsize_calc = 10 # speed vs. accuracy of multijoiner; values over 10 are not recommended (very long execution times); -1 turns iterative process off -> can take forever
-    max_sort_calc = 0#20 # sprevents long calcuations for multijoiner; after sorting max_sort_calc entries, the remaining entries are quickly sorted by their mean ranks
+    max_sort_calc = 10 #20 # sprevents long calcuations for multijoiner; after sorting max_sort_calc entries, the remaining entries are quickly sorted by their mean ranks
     only_subset = True # calculate joined ranking over defined subsets instead of all available rankings
     name_joined_rank = "joined_"+dc.rank_prefix
     all_sources = dc.get_all_sources_rob18()
-    #all_sources = [("mvs", [dc.sorting_middlb_mvs()])]#, dc.sorting_eth3d_mvs()])]#, dc.sorting_middlb_stereov3(), dc.sorting_kitti2012_stereo(), dc.sorting_kitti2015_stereo()])]
+    #all_sources = [("depth", [dc.sorting_kitti_depth()])]#, dc.sorting_eth3d_mvs()])]#, dc.sorting_middlb_stereov3(), dc.sorting_kitti2012_stereo(), dc.sorting_kitti2015_stereo()])]
     
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
@@ -21,6 +21,7 @@ if __name__ == "__main__":
         tmp_dir = os.path.join(tmp_dir_root, str(int(dc.unix_time_now()))+"_tmp")
         archive_dir = os.path.join(tmp_dir_root,"archive")
     else:
+        #this is for debugging only: unzip one of the archived tmp folders into data/_tmp/
         tmp_dir = os.path.join(tmp_dir_root, "_tmp")
         archive_dir = None
     
@@ -40,15 +41,13 @@ if __name__ == "__main__":
     
     #per challenge...
     merge_csv_files = []
-    subset_ranking_names = []
     result_files = []
     for name, sources in all_sources:
         #skip calculation of this subset as the respective online resource could not be crawled
         if not sucess_subsets is None and not name in sucess_subsets:
             rclogger.warning("Skipping calculations for subset "+name+" as not all necessary online resources could be crawled.")
             continue 
-        #try:
-        if True:
+        try:
             all_vals = dc.get_joined_dataset(sources, tmp_dir, only_subset=only_subset, read_only=read_only)
             
             #one large csv containing all the data
@@ -60,13 +59,12 @@ if __name__ == "__main__":
             
             #gather only the intersection between all datasets
             dc.save_as_csv(header_list, filtered_vals.keys(), filtered_vals, tmp_dir + "/filtered_%s.csv" % name, order_name="idx")
-            check_list = list(filtered_vals.values())
-            
-            if len(check_list) <= 0 :
+            if len(filtered_vals.keys()) <= 0 :
                 rclogger.warning("Datasets of subset "+name+ " do not share common methods; skipping rank joining..")
                 continue
             
             all_sources_calculated = True
+            subset_ranking_names = []
             #create subset joined rankings per benchmark (this allows easier viewing on the website)
             for s in sources:
                 if s.format_subset() is None: # this source is only archived for historical data reasons and is not used for acquiring rankings
@@ -86,6 +84,7 @@ if __name__ == "__main__":
                 header_list_subset += sorted(list(set(src_keys) - set(header_list_subset)))
                 sub_join_file = tmp_dir + "/subjoined_%s.csv" % src_name
                 sub_join_name = name_joined_rank+"_"+src_name
+                #add new subset ranking to filtered_vals
                 filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, sub_join_name, subjoined_ranking)
                 dc.save_as_csv(header_list_subset, subjoined_ranking, src_filtered_vals, sub_join_file, order_name=sub_join_name)
                 
@@ -96,10 +95,10 @@ if __name__ == "__main__":
                 continue
                       
             rclogger.info("Calculating joined ranking for subset "+name)
-            joined_ranking = get_joined_ranking(check_list, dc.column_id, subset_ranking_names, batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = {}, rclogger = rclogger)
+            joined_ranking = get_joined_ranking(filtered_vals, dc.column_id, subset_ranking_names, batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = {}, rclogger = rclogger)
              # Balance the influence of each dataset (sum of wheights per dataset are the same)
             # wheights = dc.calc_weight_per_benchmark(all_rankings, sources)
-            # joined_ranking = get_joined_ranking(check_list, dc.column_id, all_rankings,  batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = wheights, rclogger = rclogger)
+            # joined_ranking = get_joined_ranking(list(filtered_vals.values()), dc.column_id, all_rankings,  batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = wheights, rclogger = rclogger)
                         
             if len(joined_ranking) <= 0:
                 rclogger.warning("Skipping calculations for subset "+name+" as no overall joined ranking could be calculated.")
@@ -116,9 +115,9 @@ if __name__ == "__main__":
             dc.save_as_csv([name_joined_rank,dc.column_id]+subset_ranking_names, joined_ranking, condensed_vals, condensed_res_file, order_name=None)
             overall_res_file = res_dir + "/ranked_full_%s.csv" % name
             shutil.copy(overall_res_file_tmp, overall_res_file)
-        #except  Exception as e:
-        #    rclogger.error("Skipping calculations for subset "+name+"; Exception: "+str(e))
-        #    continue 
+        except  Exception as e:
+            rclogger.error("Skipping calculations for subset "+name+"; Exception: "+str(e))
+            continue 
         
         #each subset creates two result files: one condensed and one full  
         result_files.append(overall_res_file)
