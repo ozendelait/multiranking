@@ -170,12 +170,11 @@ def get_all_rankings(all_vals, required_name = None):
     all_rankings = sorted(list(all_rankings))
     return all_keys, all_rankings
 
-def remove_incomplete(all_vals, check_list, require_prefix):
+def remove_incomplete(all_vals, check_list, whitelist):
     filtered_vals = {}
     for method, vals in all_vals.iteritems():
-        if not require_prefix is None:
-            if method.find(require_prefix) < 0:
-                continue
+        if not whitelist is None and not method in whitelist:
+            continue
         all_entries_found = True
         for entry in check_list:
             if not entry in vals or vals[entry] is None or vals[entry] == "":

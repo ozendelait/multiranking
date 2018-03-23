@@ -131,7 +131,7 @@ def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None
                     except:
                         val = val.encode('latin-1','ignore')
                     val = val.replace(seperator, repl_seperator)
-                    outfile.write('%s;' % val)
+                    outfile.write(val+seperator)
                 outfile.write('\n')
                 has_content = True
             if has_content:

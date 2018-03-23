@@ -1,4 +1,4 @@
-import shutil, os, logging
+import shutil, os, logging, sys
 from multi_ranking import get_joined_ranking
 import datacrawler as dc
 
@@ -13,6 +13,12 @@ if __name__ == "__main__":
     name_joined_rank = "joined_"+dc.rank_prefix
     all_sources = dc.get_all_sources_rob18()
     #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow()])]
+    
+    if len(sys.argv) > 1:
+        #read whitelist txt file
+        with open(sys.argv[1]) as wlfile:
+            wl_lines = wlfile.readlines()
+        white_list = [l.split(';')[0].strip() for l in wl_lines]
     
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
@@ -32,8 +38,6 @@ if __name__ == "__main__":
     rclogger = dc.setup_logging(tmp_dir)
     rclogger.info("Started crawler, tmp_dir: %s, res_dir: %s, archive_dir: %s ", tmp_dir, res_dir, archive_dir)
     
-    require_postfix = None #"_ROB"
-        
     #first download all resources
     sucess_subsets = None
     if read_only <= 0:
@@ -55,7 +59,7 @@ if __name__ == "__main__":
             header_list = [dc.column_id] + sorted(list(all_rankings))
             header_list += sorted(list(set(all_keys) - set(header_list)))
             dc.save_as_csv(header_list, all_vals.keys(), all_vals, tmp_dir + "/all_%s.csv" % name, order_name="idx")
-            filtered_vals = dc.remove_incomplete(all_vals, all_rankings, require_postfix)
+            filtered_vals = dc.remove_incomplete(all_vals, all_rankings, white_list)
             
             #gather only the intersection between all datasets
             dc.save_as_csv(header_list, filtered_vals.keys(), filtered_vals, tmp_dir + "/filtered_%s.csv" % name, order_name="idx")
@@ -106,7 +110,8 @@ if __name__ == "__main__":
             
             filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, name_joined_rank, joined_ranking)
             overall_res_file = res_dir + "/ranked_full_%s.csv" % name
-            dc.save_as_csv([name_joined_rank]+header_list, joined_ranking, filtered_vals, overall_res_file)
+            all_val = [r.replace(dc.rank_prefix+"_","") for r in all_rankings]
+            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names+all_rankings+all_val, joined_ranking, filtered_vals, overall_res_file)
             merge_csv_files.append(overall_res_file)
             
             #this file is a condensed version having the overall joined ranks and the individual joined ranks per dataset
