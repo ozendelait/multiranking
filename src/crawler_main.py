@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import shutil, os, logging, sys
 from multi_ranking import get_joined_ranking
 import datacrawler as dc
