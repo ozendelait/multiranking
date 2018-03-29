@@ -171,8 +171,7 @@ class sorting_scannet_depth(sorting_source_cl):
         return soup.find_all("table", class_="table-condensed")[0].find_all("tr")
     def get_relevant_td(self, version=""):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("abs-rel", 2, "float", False, 1), self.TDEntry("inv-mae", 3, "float", False, 1), 
-                self.TDEntry("inv-rmse", 4, "float", False, 1), self.TDEntry("log-mae", 5, "float", False, 1), self.TDEntry("log-rmse", 6, "float", False, 1), 
-                 self.TDEntry("mae", 7, "float", False, 1), self.TDEntry("rmse", 8, "float", False, 1), self.TDEntry("scale-invar", 9, "float", False, 1), self.TDEntry("sqr-rel", 10, "float", False, 1)]
+                self.TDEntry("inv-rmse", 4, "float", False, 1),  self.TDEntry("scale-invar", 9, "float", False, 1), self.TDEntry("sqr-rel", 10, "float", False, 1)]
 
 class sorting_cityscapes_instance(sorting_source_cl):
     def base_url(self):
@@ -283,7 +282,7 @@ class sorting_kitti_instance(sorting_source_cl):
         return soup.find("table", class_="results").find_all("tr")
     def get_relevant_td(self, version=""):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("ap", 4, "float", False,1), self.TDEntry("ap50", 5, "float", False,1), self.TDEntry("runtime", 6, "time", False)]
-    
+        
 class sorting_eth3d_stereo(sorting_source_cl):
     def base_url(self):
         return "https://www.eth3d.net/low_res_two_view?coverage={coverage}&set={set}&metric={metric}&mask={mask}"
@@ -367,15 +366,80 @@ class sorting_eth3d_low_mvs(sorting_source_cl):
             sort_order = 1
             
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("low-res-mv", 3, type0, True,sort_order), self.TDEntry("indoor", 4, type0, True,sort_order), self.TDEntry("outdoor", 5, type0, True,sort_order)]
-       
+          
+
+class sorting_wilddash_prototype(sorting_source_cl):
+    eval_framesets = ['classic', 'negative', 'blur_high', 'blur_none', 'blur_low',
+                      'coverage_high', 'coverage_none', 'coverage_low',
+                      'distortion_high', 'distortion_none', 'distortion_low',
+                      'occlusion_high', 'occlusion_none', 'occlusion_low',
+                      'overexp_high', 'overexp_none', 'overexp_low',
+                      'particles_high', 'particles_none', 'particles_low',
+                      'screen_high', 'screen_none', 'screen_low',
+                      'underexp_high', 'underexp_none', 'underexp_low',
+                      'variations_high', 'variations_none', 'variations_low'] 
+    algo_disp_name = "algorithm"
+    expect_suffix = None 
+    #algo_disp_name = "algorithm_display_name"
+    def base_url(self):
+        return None
+    def get_rows(self, soup): # no standard <tr><td> schema but uses json
+        return None
+    def needs_sortings(self, version):
+        all_sortings = []
+        desc_sortings = {}
+        for f in self.eval_framesets:
+            val_name = version +"_"+ f
+            all_sortings.append((val_name, desc_sortings.get(version,True)))
+        return all_sortings
+    def get_values(self, soup, version):
+        vals = json.loads(soup.text)
+        get_vals = {}
+        for f in vals["results"]:
+            fr_name = f['frame_set']
+            if not self.expect_suffix is None:
+                if not fr_name.endswith(self.expect_suffix):
+                    continue
+                fr_name = fr_name[:-len(self.expect_suffix)]
+            if fr_name in self.eval_framesets and not f["value"] is None:
+                val_name = version +"_"+ fr_name
+                if not f[self.algo_disp_name] in get_vals:
+                    n_entry = {self.column_id:f[self.algo_disp_name], val_name: f["value"]}
+                    get_vals[f[self.algo_disp_name]] = n_entry
+                else:
+                    get_vals[f[self.algo_disp_name]][val_name] = f["value"]
+        return get_vals
+
+class sorting_wilddash_instance(sorting_wilddash_prototype):
+    expect_suffix = "2"
+    def base_url(self):
+        return "http://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&metrics={metrics}"
+    def name(self):
+        return "wilddash_inst"
+    def formats(self):
+        return {"metrics" : {"ap", "ap50"}}
+    def format_subset(self):
+        return  {"metrics" : {"ap", "ap50"}}
+    
+
+class sorting_wilddash_semantics(sorting_wilddash_prototype):
+    def base_url(self):
+        return "http://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&metrics={metrics}"
+    def name(self):
+        return "wilddash_sem"
+    def formats(self):
+        return {"metrics" : {"iou_class", "iou_category", "iiou_class", "iiou_category"}}
+    def format_subset(self):
+        return {"metrics" : {"iiou_class", "iiou_category"}}
+    
 
 def get_all_sources_rob18():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
-    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]  # missing: hd1k
+    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
     all_mvs_sources = [sorting_middlb_mvs(), sorting_eth3d_low_mvs(), sorting_eth3d_high_mvs()]
     all_depth_sources = [sorting_kitti_depth(), sorting_scannet_depth()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_scannet_semantics()]  # TODO:  Wilddash
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_scannet_instance()]  # TODO:  Wilddash
+    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_scannet_semantics(), sorting_wilddash_semantics()]
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_scannet_instance(), sorting_wilddash_instance()]
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("mvs", all_mvs_sources),
                    ("depth", all_depth_sources), ("semantic", all_semantic_sources), ("instance", all_instance_sources)]
     return all_sources
