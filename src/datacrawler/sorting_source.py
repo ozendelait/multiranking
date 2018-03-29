@@ -49,6 +49,8 @@ class sorting_source_cl:
         return []
         
     def all_urls(self, use_subset=False):
+        if self.base_url() is None:
+            return dict()
         curr_urls = {self.name():self.base_url()}
         
         format_subset = self.formats()

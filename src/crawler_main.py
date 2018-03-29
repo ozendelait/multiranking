@@ -18,7 +18,7 @@ if __name__ == "__main__":
     #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2012_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_hd1k_flow()])]
     #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
     
-    #all_sources = [("ethmvs", [dc.sorting_eth3d_low_mvs()])]
+    #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_scannet_semantics(), dc.sorting_wilddash_semantics()])]
     white_list = None
     
     if len(sys.argv) > 1:
@@ -59,7 +59,8 @@ if __name__ == "__main__":
             continue 
         try:
             all_vals = dc.get_joined_dataset(sources, tmp_dir, only_subset=only_subset, read_only=read_only, allow_fuzzy_namecmp = allow_fuzzy_namecmp)
-            
+            if len(all_vals) <= 0:
+                continue # skip this subset, it has no data (on purpose; otherwise get_joined_dataset would throw an exception)
             #one large csv containing all the data
             all_keys, all_rankings = dc.get_all_rankings(all_vals)
             header_list = [dc.column_id] + sorted(list(all_rankings))

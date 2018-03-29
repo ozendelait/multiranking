@@ -413,6 +413,7 @@ class sorting_wilddash_prototype(sorting_source_cl):
 class sorting_wilddash_instance(sorting_wilddash_prototype):
     expect_suffix = "2"
     def base_url(self):
+        return None
         return "http://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&metrics={metrics}"
     def name(self):
         return "wilddash_inst"
@@ -424,6 +425,7 @@ class sorting_wilddash_instance(sorting_wilddash_prototype):
 
 class sorting_wilddash_semantics(sorting_wilddash_prototype):
     def base_url(self):
+        return None
         return "http://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&metrics={metrics}"
     def name(self):
         return "wilddash_sem"
