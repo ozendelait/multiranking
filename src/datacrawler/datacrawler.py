@@ -32,7 +32,7 @@ def save_html_dataset(url, trg_path):
     rclogger = setup_logging(None)
     try:
         rclogger.info("Requesting online resource url "+ url)
-        html_doc = requests.get(url, verify=False, timeout=2.0).text
+        html_doc = requests.get(url, verify=False, timeout=10.0).text
     except Exception as e:
         rclogger.error("Failed to open url "+ url + " Exception: "+ str(e))
         return False
@@ -69,10 +69,11 @@ def get_csv_datasets(src, url_id, html_path, csv_path, only_subset=True ):
                 if not column_id in vals:
                     rclogger.warning("Found empty id row at %s row %i" % (url_id, rowidx))
                     continue
-                if vals[column_id] in all_vals:
-                    rclogger.warning("Skipping additional data for multiple entries of id " + vals[column_id] + " in file " + html_path)
+                column_id_fixed = vals[column_id]
+                if column_id_fixed in all_vals:
+                    rclogger.warning("Skipping additional data for multiple entries of id " + column_id_fixed + " in file " + html_path)
                     continue
-                all_vals[vals[column_id]] = vals
+                all_vals[column_id_fixed] = vals
                 rowidx += 1
             except ValueError:
                 pass #deliberately skip this row
@@ -113,7 +114,7 @@ def fetch_datasets(all_sources,  tmp_dir, only_subset=False):
     return sucess_subsets
 
 
-def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0):
+def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allow_fuzzy_namecmp = 0):
     rclogger = setup_logging(None)
     #The following steps are done in this sequence to later allow reconstruction of historical data; also some datasources might directly provide csv               
     if read_only <= 1:       
@@ -134,7 +135,7 @@ def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0):
             csv_path = os.path.join(tmp_dir, url_id+csv_raw_postfix+".csv")
             loaded_urls.append(csv_path)
     
-    return ct.join_csv_files(loaded_urls, column_id= column_id, rclogger = rclogger)
+    return ct.join_csv_files(loaded_urls, column_id= column_id, rclogger = rclogger, allow_fuzzy_namecmp = allow_fuzzy_namecmp)
 
 def calc_weight_per_benchmark(all_rankings, all_srcs, multiplier = 100):
     cnt_rankings = {}
@@ -185,6 +186,50 @@ def remove_incomplete(all_vals, check_list, whitelist):
 
     return filtered_vals
 
+def mixed_ranking_vals_headers(all_vals, all_rankings, rank_first=True):
+    rclogger = setup_logging(None)
+    return_headers = []
+    for r in all_rankings:
+        if not r in all_vals:
+            continue
+        
+        val_name = r.replace(rank_prefix+"_",'')
+        
+        if rank_first:
+            return_headers.append(r)
+            
+        if val_name in all_vals:
+            return_headers.append(val_name)
+        else:
+            rclogger.error("Value for rank "+r+"not found; adding without val")
+            
+        if not rank_first:
+            return_headers.append(r)
+            
+    return return_headers
+
+def normalize_rankings(all_vals, all_rankings, add_old_rank = False):
+    rclogger = setup_logging(None)
+    for r_name in all_rankings:
+        calc_sort = []
+        for name, vals in all_vals.iteritems():
+            if r_name in vals:
+                calc_sort.append((int(vals[r_name]),name))
+        if len(calc_sort) <= 0:
+            continue
+        calc_sort = sorted(calc_sort)
+        prev_val = None
+        prev_rank = 0
+        for (r_old,name) in calc_sort:
+            if r_old != prev_val:
+                prev_rank += 1
+            
+            if add_old_rank:
+                all_vals[name][r_name] = "%i (%i)" % (prev_rank, r_old)    
+            else: 
+                all_vals[name][r_name] = prev_rank       
+    return all_vals
+            
 def add_new_ranking(all_vals, column_id, ranking_name, ranking):
     curr_rank = 1
     for same_rank in ranking:

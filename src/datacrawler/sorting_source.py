@@ -81,7 +81,7 @@ class sorting_source_cl:
         if not soap1.find('td', class_ = 'results_sub') is None:
             raise ValueError('Skip invalid row') #skip whole row
         entries = soap1.find_all('td')
-        if len(entries) <= 0:
+        if len(entries) <= 0 or (len(entries) == 1 and entries[0].has_attr('colspan') and int(entries[0]['colspan']) > 2):
             raise ValueError('Skip invalid row') #skip whole row
         for tde in self.get_relevant_td(version):
             val = None
@@ -96,6 +96,9 @@ class sorting_source_cl:
                     if val is None:
                         val = remove_tag(str(entries[tde.pos]), "td")
                         val_br = val.split('<br/>')
+                        if len(val_br) == 1 and val.find('</b>') > 0 and val.find('</span>') > 0:
+                            val_br = val.split('</b>') #fix needed for scannet
+                            val_br[0] = val_br[0].replace('<b>','')
                         if len(val_br) > 0:
                             sel_idx = min(int(len(val_br)*sub_pos+0.5), len(val_br)-1)
                             val = val_br[sel_idx]
