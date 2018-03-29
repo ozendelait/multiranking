@@ -31,12 +31,15 @@ def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None
     for idx0, l in enumerate(all_lines):
         if not parsed_header_line:
             pos_sep_char = l.find(seperator_def)
+            if l.startswith(comment_char):
+                continue
             if pos_sep_char >= 0 and pos_sep_char < len(l) - 1:
                 c0 = pos_sep_char + len(seperator_def)
                 seperator_char = l[c0:c0 + 1]
                 continue
-            if l.startswith(comment_char):
-                continue
+            elif l.find(seperator_char) < 0 and l.find(';') >= 0:
+                seperator_char = ';'#Excel often forgets to insert the proper separator char but uses ';' instead of ',' per default
+                
             headers = [x.strip() for x in l.split(seperator_char)]
             if column_id not in headers:
                 rclogger.error("Csv file " + csv_path + " does not contain the column id row " + column_id + ". Skipping the whole file.")
