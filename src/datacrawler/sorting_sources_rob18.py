@@ -245,8 +245,7 @@ class sorting_kitti2012_flow(sorting_source_cl):
     def formats(self):
         return {"error" : {"2", "3", "4", "5"}, "eval" : {"all" , "est"}}
     def format_subset(self):
-        return {"error" : {"3"}, "eval" : {"all"}}
-        #return None
+        return None
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")[1:]
     def get_relevant_td(self, version=""):
@@ -331,7 +330,13 @@ class sorting_eth3d_high_mvs(sorting_source_cl):
                 rows.append(one_tr)
         return rows
     def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("val", 2, "float", True)]
+        type0 = "percentage"
+        sort_order = -1
+        if version.find("time") >= 0:
+            type0 = "float"
+            sort_order = 1
+            
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("high-res-mv", 3, type0, True,sort_order), self.TDEntry("indoor", 4, type0, True,sort_order), self.TDEntry("outdoor", 5, type0, True,sort_order)]
     
 class sorting_eth3d_low_mvs(sorting_source_cl):
     def base_url(self):
@@ -355,8 +360,14 @@ class sorting_eth3d_low_mvs(sorting_source_cl):
                 rows.append(one_tr)
         return rows
     def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("val", 2, "float", True)]
-
+        type0 = "percentage"
+        sort_order = -1
+        if version.find("time") >= 0:
+            type0 = "float"
+            sort_order = 1
+            
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("low-res-mv", 3, type0, True,sort_order), self.TDEntry("indoor", 4, type0, True,sort_order), self.TDEntry("outdoor", 5, type0, True,sort_order)]
+       
 
 def get_all_sources_rob18():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]

@@ -41,8 +41,8 @@ class sorting_source_cl:
     def needs_sortings(self, version):
         all_sortings = []
         for tde in self.get_relevant_td(version):
-            if tde.needs_ranking:
-                all_sortings.append((tde.name, dir < 0))
+            if (tde.needs_ranking != 0) and (tde.needs_ranking != '0'):
+                all_sortings.append((tde.name, int(tde.needs_ranking) < 0))
         return all_sortings
     
     def get_relevant_td(self, version=""):
@@ -96,13 +96,15 @@ class sorting_source_cl:
                     if val is None:
                         val = remove_tag(str(entries[tde.pos]), "td")
                         val_br = val.split('<br/>')
-                        if len(val_br) == 1 and val.find('</b>') > 0 and val.find('</span>') > 0:
-                            val_br = val.split('</b>') #fix needed for scannet
-                            val_br[0] = val_br[0].replace('<b>','')
+                        if len(val_br) == 1 and val.find(' <span') > 0:
+                            val_br = val.split(' <span') #fix needed for scannet/eth3d
+                            if len(val_br) > 1:
+                                val_br[1] = '<span'+val_br[1]
                         if len(val_br) > 0:
                             sel_idx = min(int(len(val_br)*sub_pos+0.5), len(val_br)-1)
                             val = val_br[sel_idx]
                             val = remove_tag(val,"span")
+                            val = remove_tag(val,"b")
             else:
                 pos_all = tde.pos
                 if not isinstance(tde.pos, list):
@@ -215,8 +217,12 @@ class sorting_source_cl:
         if len(o_sort) <= 0:
             raise Exception("Could not generating ranking. No elements for "+find_name+ " found.")  
         
-        for idx,(k,v) in enumerate(o_sort): #TODO: allow parity of entries (same ranks for same values)
-            all_vals[k][param_name] = (idx+1)
+        last_val = -1
+        prev_rank = 0
+        for (k,v) in o_sort: #TODO: allow parity of entries (same ranks for same values)
+            if v != last_val:
+                prev_rank += 1
+            all_vals[k][param_name] = prev_rank
         return all_vals
             
             

@@ -150,15 +150,21 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
             rclogger.error("Ranking "+ name + " not found in input data")
             return []
         ranking = sorted(ranking)
-        method_ranking = [i[1] for i in ranking]
-        method_rankings[name] = method_ranking     
-        max_len_rankings = max(max_len_rankings, len(method_ranking))
-        id0 = str(method_ranking)
+        list_of_lists = []
+        last_rank = None
+        for (r, id0) in ranking:
+            if r == last_rank:
+                list_of_lists[-1].append(id0)
+            else:
+                list_of_lists.append([id0])
+            last_rank = r
+        method_rankings[name] = list_of_lists
+        max_len_rankings = max(max_len_rankings, len(list_of_lists))
+        id0 = str(list_of_lists)
         
         if id0 in all_rankings:
             all_rankings[id0]["count"] += curr_weight
         else:
-            list_of_lists = [[str(i)] for i in method_ranking]
             all_rankings[id0] = {"count": curr_weight, "ballot" : list_of_lists}
         
     if len(all_rankings) <= 0:
@@ -166,11 +172,12 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
         return []        
     
     tie_breaker_score = {}
-    for name, method_ranking in method_rankings.iteritems():
+    for name, list_of_lists in method_rankings.iteritems():
         curr_weight = weight_p_ranking.get(name,1)
-        for idx,m in enumerate(method_ranking):
-            score_add = curr_weight*(max_len_rankings-idx)
-            tie_breaker_score[m] = tie_breaker_score.get(m,0)+score_add
+        for idx,list_m in enumerate(list_of_lists):
+            for m in list_m: #these share the same place
+                score_add = curr_weight*(max_len_rankings-idx)
+                tie_breaker_score[m] = tie_breaker_score.get(m,0)+score_add
     
     
     ranking_ties = sorted(tie_breaker_score.items(), key=lambda x: x[1], reverse=True)
