@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
     #call test_cases and compare against existing joined rank
     test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../tests")
-    test_files=['t0.csv', 't1.csv', 't2.csv', 't3.csv', 't4.csv', 't5.csv']
+    test_files=['t0.csv', 't1.csv', 't2.csv', 't3.csv', 't4.csv', 't5.csv', 't6.csv', 't7.csv']
     rclogger = dc.setup_logging(test_dir+'/result_testrun.log')
     batchsize_calc = 10 
     max_sort_calc= 10
@@ -46,4 +46,5 @@ if __name__ == "__main__":
                     rclogger.error('Rank mismatch for row '+name+ ' ( %i vs. %i)  of %s'%(v0,v1,t))
                     sys.exit(-1)
         rclogger.info("Test "+t+" completed successfully.")
+    rclogger.info("All tests completed successfully.")
     sys.exit(0)
