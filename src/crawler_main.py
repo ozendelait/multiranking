@@ -42,7 +42,7 @@ if __name__ == "__main__":
         if not d is None and not os.path.exists(d):
             os.makedirs(d)
     
-    rclogger = dc.setup_logging(tmp_dir)
+    rclogger = dc.setup_logging(tmp_dir+'/robcrawler.log')
     rclogger.info("Started crawler, tmp_dir: %s, res_dir: %s, archive_dir: %s ", tmp_dir, res_dir, archive_dir)
     
     #first download all resources

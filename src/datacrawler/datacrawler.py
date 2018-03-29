@@ -12,13 +12,12 @@ logger_name = __name__ + "combined"
 rclogger = None
 
 #initializes logging
-def setup_logging(log_dir):
+def setup_logging(log_file):
     global rclogger, logger_name
     if rclogger is None:
         rclogger = logging.getLogger(logger_name)
         #log into file
-        if not log_dir is None:
-            log_file = os.path.join(log_dir,'robcrawler.log')
+        if not log_file is None:
             handler = logging.FileHandler(log_file)
             # create a logging format
             formatter = logging.Formatter('%(asctime)s -(%(filename)s:%(lineno)d- %(levelname)s: %(message)s')
