@@ -156,6 +156,8 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
             if r == last_rank:
                 list_of_lists[-1].append(id0)
             else:
+                if len(list_of_lists) > 0 and len(list_of_lists[-1]) > 1:
+                    list_of_lists[-1] = sorted(list_of_lists[-1]) # sort entries with the same rank alphabetically, allows correct adding of duplicate rankings
                 list_of_lists.append([id0])
             last_rank = r
         method_rankings[name] = list_of_lists

@@ -1,6 +1,7 @@
 #Hint: escape forward slashes (char '/') using %2F; otherwise the automatic naming for html/csv files will fail
 from sorting_source import sorting_source_cl
 import json
+from string import digits as strdg
 
 class sorting_sintel_flow(sorting_source_cl):
     def base_url(self):
@@ -372,13 +373,15 @@ class sorting_wilddash_prototype(sorting_source_cl):
     eval_framesets = ['classic', 'negative', 'blur_high', 'blur_none', 'blur_low',
                       'coverage_high', 'coverage_none', 'coverage_low',
                       'distortion_high', 'distortion_none', 'distortion_low',
+                      'hood_high', 'hood_none', 'hood_low',
                       'occlusion_high', 'occlusion_none', 'occlusion_low',
                       'overexp_high', 'overexp_none', 'overexp_low',
                       'particles_high', 'particles_none', 'particles_low',
                       'screen_high', 'screen_none', 'screen_low',
                       'underexp_high', 'underexp_none', 'underexp_low',
                       'variations_high', 'variations_none', 'variations_low'] 
-    algo_disp_name = "algorithm"
+    algo_disp_name = "algorithm_display_name"
+    access_elem = "label_class" # "frame_set"
     expect_suffix = None 
     #algo_disp_name = "algorithm_display_name"
     def base_url(self):
@@ -396,11 +399,10 @@ class sorting_wilddash_prototype(sorting_source_cl):
         vals = json.loads(soup.text)
         get_vals = {}
         for f in vals["results"]:
-            fr_name = f['frame_set']
-            if not self.expect_suffix is None:
-                if not fr_name.endswith(self.expect_suffix):
-                    continue
-                fr_name = fr_name[:-len(self.expect_suffix)]
+            if not self.access_elem in f:
+                continue
+            fr_name = f[self.access_elem]
+            fr_name = str(fr_name).translate(None, strdg) #remove unnecessary postfixes
             if fr_name in self.eval_framesets and not f["value"] is None:
                 val_name = version +"_"+ fr_name
                 if not f[self.algo_disp_name] in get_vals:
@@ -408,13 +410,17 @@ class sorting_wilddash_prototype(sorting_source_cl):
                     get_vals[f[self.algo_disp_name]] = n_entry
                 else:
                     get_vals[f[self.algo_disp_name]][val_name] = f["value"]
+        #for algo, vals in get_vals.iteritems():
+        #    for e in self.eval_framesets:
+        #        check_v = version +"_"+ e
+        #        if not check_v in vals:
+        #            print("Warning: did not get values for id "+e+" for algorithm "+algo)
         return get_vals
 
 class sorting_wilddash_instance(sorting_wilddash_prototype):
     expect_suffix = "2"
     def base_url(self):
-        return None
-        return "http://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&metrics={metrics}"
+        return "http://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
     def name(self):
         return "wilddash_inst"
     def formats(self):
@@ -425,14 +431,13 @@ class sorting_wilddash_instance(sorting_wilddash_prototype):
 
 class sorting_wilddash_semantics(sorting_wilddash_prototype):
     def base_url(self):
-        return None
-        return "http://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&metrics={metrics}"
+        return "http://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&frame_sets=summary_average&metrics={metrics}"
     def name(self):
         return "wilddash_sem"
     def formats(self):
         return {"metrics" : {"iou_class", "iou_category", "iiou_class", "iiou_category"}}
     def format_subset(self):
-        return {"metrics" : {"iiou_class", "iiou_category"}}
+        return {"metrics" : {"iou_category","iou_class", "iou_category", "iiou_class", "iiou_category"}}
     
 
 def get_all_sources_rob18():

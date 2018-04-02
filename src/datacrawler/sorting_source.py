@@ -1,4 +1,3 @@
-from collections import namedtuple
 from datacrawler import column_id
 from datacrawler import rank_prefix
 
@@ -225,6 +224,7 @@ class sorting_source_cl:
             if v != last_val:
                 prev_rank += 1
             all_vals[k][param_name] = prev_rank
+            last_val = v
         return all_vals
             
             
