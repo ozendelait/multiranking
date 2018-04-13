@@ -25,7 +25,7 @@ if __name__ == "__main__":
         #read whitelist txt file
         with open(sys.argv[1]) as wlfile:
             wl_lines = wlfile.readlines()
-        white_list = [dc.res_name_fuzzy_cmp(l.split(';')[0].strip(), allow_fuzzy_namecmp) for l in wl_lines]
+        white_list = [dc.res_name_fuzzy_cmp(l.split(';')[1].strip(), allow_fuzzy_namecmp) for l in wl_lines]
     
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
