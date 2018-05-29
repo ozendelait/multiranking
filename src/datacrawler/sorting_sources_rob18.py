@@ -272,7 +272,9 @@ class sorting_kitti_semantics(sorting_source_cl):
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
     def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("iou-class", 4, "float", False,1), self.TDEntry("iiou-class", 5, "float", False,1), self.TDEntry("iou-category", 6, "float", False,1), self.TDEntry("iiou-category", 7, "float", False,1), self.TDEntry("runtime", 8, "time", False)]
+        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("iou-class", 4, "float", False, -1), 
+                self.TDEntry("iiou-class", 5, "float", False, -1), self.TDEntry("iou-category", 6, "float", False, -1), 
+                self.TDEntry("iiou-category", 7, "float", False,-1), self.TDEntry("runtime", 8, "time", False)]
 
 class sorting_kitti_instance(sorting_source_cl):
     def base_url(self):
