@@ -284,7 +284,7 @@ class sorting_kitti_instance(sorting_source_cl):
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
     def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("ap", 4, "float", False,1), self.TDEntry("ap50", 5, "float", False,1), self.TDEntry("runtime", 6, "time", False)]
+        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("ap", 4, "float", False,-1), self.TDEntry("ap50", 5, "float", False,-1), self.TDEntry("runtime", 6, "time", False)]
         
 class sorting_eth3d_stereo(sorting_source_cl):
     def base_url(self):
