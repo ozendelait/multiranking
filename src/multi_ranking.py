@@ -45,6 +45,7 @@ def iterative_schulz(input_rankings, num_per_iter, max_calc = -1, tie_breakers=N
                     multi_ranking[-1].append(c) #ties with last entry in list
             if len(last_c) > 0:
                 multi_ranking.append(last_c)
+            break # sorting completed
         elif len(input_rankings) > 0 and len(open_candidates) > 0:
             remaining_ranking = schulze_pr.SchulzePR(input_rankings, ballot_notation=condorcet.CondorcetHelper.BALLOT_NOTATION_GROUPING, winner_threshold=min(num_per_iter, len(open_candidates))).as_dict()
             #remaining_ranking = schulze_stv.SchulzeSTV(input_rankings, ballot_notation=condorcet.CondorcetHelper.BALLOT_NOTATION_GROUPING, winner_threshold=min(num_per_iter, len(open_candidates))).as_dict()
