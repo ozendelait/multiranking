@@ -1,0 +1,10 @@
+"sep=;"
+joined_rank;method;joined_rank_eth3d_st;joined_rank_middlb_st;joined_rank_kitti15_st;
+1;SGM-Forest;2;1;1;
+2;CBMV;1;3;2;
+3;MeshStereo;4;2;4;
+3;SGM_ROB;3;4;3;
+5;ELAS_ROB;5;5;5;
+6;ELAS;6;6;5;
+7;MEDIAN_ROB;7;8;7;
+8;AVERAGE_ROB;8;7;8;

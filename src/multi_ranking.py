@@ -45,6 +45,7 @@ def iterative_schulz(input_rankings, num_per_iter, max_calc = -1, tie_breakers=N
                     multi_ranking[-1].append(c) #ties with last entry in list
             if len(last_c) > 0:
                 multi_ranking.append(last_c)
+            break # sorting completed
         elif len(input_rankings) > 0 and len(open_candidates) > 0:
             remaining_ranking = schulze_pr.SchulzePR(input_rankings, ballot_notation=condorcet.CondorcetHelper.BALLOT_NOTATION_GROUPING, winner_threshold=min(num_per_iter, len(open_candidates))).as_dict()
             #remaining_ranking = schulze_stv.SchulzeSTV(input_rankings, ballot_notation=condorcet.CondorcetHelper.BALLOT_NOTATION_GROUPING, winner_threshold=min(num_per_iter, len(open_candidates))).as_dict()
@@ -150,15 +151,23 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
             rclogger.error("Ranking "+ name + " not found in input data")
             return []
         ranking = sorted(ranking)
-        method_ranking = [i[1] for i in ranking]
-        method_rankings[name] = method_ranking     
-        max_len_rankings = max(max_len_rankings, len(method_ranking))
-        id0 = str(method_ranking)
+        list_of_lists = []
+        last_rank = None
+        for (r, id0) in ranking:
+            if r == last_rank:
+                list_of_lists[-1].append(id0)
+            else:
+                if len(list_of_lists) > 0 and len(list_of_lists[-1]) > 1:
+                    list_of_lists[-1] = sorted(list_of_lists[-1]) # sort entries with the same rank alphabetically, allows correct adding of duplicate rankings
+                list_of_lists.append([id0])
+            last_rank = r
+        method_rankings[name] = list_of_lists
+        max_len_rankings = max(max_len_rankings, len(list_of_lists))
+        id0 = str(list_of_lists)
         
         if id0 in all_rankings:
             all_rankings[id0]["count"] += curr_weight
         else:
-            list_of_lists = [[str(i)] for i in method_ranking]
             all_rankings[id0] = {"count": curr_weight, "ballot" : list_of_lists}
         
     if len(all_rankings) <= 0:
@@ -166,11 +175,12 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
         return []        
     
     tie_breaker_score = {}
-    for name, method_ranking in method_rankings.iteritems():
+    for name, list_of_lists in method_rankings.iteritems():
         curr_weight = weight_p_ranking.get(name,1)
-        for idx,m in enumerate(method_ranking):
-            score_add = curr_weight*(max_len_rankings-idx)
-            tie_breaker_score[m] = tie_breaker_score.get(m,0)+score_add
+        for idx,list_m in enumerate(list_of_lists):
+            for m in list_m: #these share the same place
+                score_add = curr_weight*(max_len_rankings-idx)
+                tie_breaker_score[m] = tie_breaker_score.get(m,0)+score_add
     
     
     ranking_ties = sorted(tie_breaker_score.items(), key=lambda x: x[1], reverse=True)

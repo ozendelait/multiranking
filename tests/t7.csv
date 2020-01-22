@@ -1,0 +1,10 @@
+"sep=;"
+joined_rank;method;ex_variations2;ex_variations3;
+1;AVERAGE_ROB;6;3;
+1;CBMV;2;7;
+1;ELAS;3;6;
+1;ELAS_ROB;4;5;
+1;MEDIAN_ROB;8;1;
+1;MeshStereo;5;4;
+1;SGM-Forest;1;8;
+1;SGM_ROB;7;2;
