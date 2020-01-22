@@ -7,6 +7,25 @@ def unix_time_millis(dt):
 def unix_time_now():
     return unix_time_millis(datetime.datetime.now())
 
+def clean_val_utf8(inp_val, prev_endless=4):
+    if prev_endless <= 0:
+        return inp_val
+    if isinstance(inp_val,dict):
+        return clean_dict_utf8(inp_val, prev_endless-1)
+    elif isinstance(inp_val,list):
+        return [clean_val_utf8(v, prev_endless-1) for v in inp_val]
+    elif isinstance(inp_val,str):
+        return inp_val.encode("utf-8").decode("ascii", "backslashreplace")
+    return inp_val
+    
+def clean_dict_utf8(inp_dict, prev_endless=4):
+    if prev_endless <= 0:
+        return inp_dict
+    cleaned_dict = {}
+    for key, val in inp_dict.items():
+        cleaned_dict[key] = clean_val_utf8(val, prev_endless)
+    return cleaned_dict
+
 # this method requires a header row to work
 def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None):
     if rclogger is None:

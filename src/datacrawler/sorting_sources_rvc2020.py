@@ -445,25 +445,32 @@ class sorting_wilddash_semantics(sorting_wilddash_prototype):
 
 
 class sorting_kaggle_template(sorting_source_cl):
-    def call_api(self, version, path):
-        return ct.load_from_csv(path, "TeamName", order_name=None)
-        
+    algo_disp_name = "teamName"
+    keep_keys = ['score']
+    def base_url(self):
+        return None
+    def get_rows(self, soup): # no standard <tr><td> schema but uses json
+        return None
+    def needs_sortings(self, version):
+        return [('score', False)]
+    def get_values(self, soup, version):
+        vals = json.loads(soup.text)
+        get_vals = {}
+        for f in vals["submissions"]:
+            if not self.algo_disp_name in f.keys():
+                continue
+            id0 = f[self.algo_disp_name]
+            get_vals[id0] = {self.column_id:id0}
+            for key, val in f.items():
+                if key in self.keep_keys:
+                    get_vals[id0][key] = val
+        return get_vals
         
 class sorting_oid_obj(sorting_kaggle_template):
     def base_url(self):
         return "kaggle://open-images-2019-object-detection"
     def name(self):
-        return "oid_o"
-    #def formats(self):
-    #    return {"pass" : {"0", "1"} }  # 0 == Final; 1 == Clean
-    def get_rows(self, soup):
-        all_tr = soup.find_all("table")[0].find_all("tr")[1:]
-        return all_tr
-    def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("EPEall", 1, "float", True, 1), self.TDEntry("EPEmatched", 2, "float", True, 1), 
-                self.TDEntry("EPEunmatched", 3, "float", True, 1),  self.TDEntry("d0-10", 4, "float", True, 1),   self.TDEntry("d10-60", 5, "float", True, 1), 
-                self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1), self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)] 
-         
+        return "oid_o"         
 
 def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]

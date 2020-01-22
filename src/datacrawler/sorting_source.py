@@ -27,9 +27,6 @@ class sorting_source_cl:
     #online resource base url
     def base_url(self):
         return "http://{url}"
-    #API call; needed for kaggle
-    def call_api(self, version, path):
-        return None
     #these format substitutions for base_url define the full scope of the crawler; the respective online resources are saved to disk
     def formats(self):
         return {}
