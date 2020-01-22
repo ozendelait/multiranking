@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import requests, os, codecs, logging
-import csv_tools as ct
+from . import csv_tools as ct
 
 html_raw_postfix = "_raw"
 csv_raw_postfix = "_raw"
@@ -105,7 +105,7 @@ def fetch_datasets(all_sources,  tmp_dir, only_subset=False):
     for name, sources in iter_src:
         sucess_fetch_all = True
         for src in sources:
-            for url_id, url in src.all_urls(use_subset=only_subset).iteritems():
+            for url_id, url in src.all_urls(use_subset=only_subset).items():
                 html_path = os.path.join(tmp_dir, url_id+html_raw_postfix+".html")
                 sucess_fetch_all &= save_html_dataset(url, html_path)
         if sucess_fetch_all:
@@ -120,7 +120,7 @@ def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allo
         # convert all html sources to csv, save to disk
         #PERFTODO: this could be done in parallel 
         for src in all_sources:
-            for url_id, _ in src.all_urls(use_subset=only_subset).iteritems():
+            for url_id, _ in src.all_urls(use_subset=only_subset).items():
                 #html_doc = urllib2.urlopen(url).read()
                 html_path = os.path.join(tmp_dir, url_id+html_raw_postfix+".html")
                 csv_path = os.path.join(tmp_dir, url_id+csv_raw_postfix+".csv")

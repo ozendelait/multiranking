@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import ABCMeta, abstractmethod
-from abstract_classes import SingleWinnerVotingSystem
+from .abstract_classes import SingleWinnerVotingSystem
 from pygraph.classes.digraph import digraph
 import itertools
 

@@ -1,5 +1,5 @@
-from datacrawler import column_id
-from datacrawler import rank_prefix
+from .datacrawler import column_id
+from .datacrawler import rank_prefix
 
 class sorting_source_cl:
     #extracted from <td> elements from <tr> nodes taken from html tables
@@ -62,7 +62,7 @@ class sorting_source_cl:
             name = params[i]
             next_urls = {}
             for val in format_subset[name]:
-                for old_id, url in curr_urls.iteritems():
+                for old_id, url in curr_urls.items():
                     next_urls[old_id+'-'+val] = url.replace("{"+name+"}",val)
             curr_urls = next_urls
         return curr_urls

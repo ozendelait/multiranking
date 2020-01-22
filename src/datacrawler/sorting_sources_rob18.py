@@ -1,5 +1,5 @@
 #Hint: escape forward slashes (char '/') using %2F; otherwise the automatic naming for html/csv files will fail
-from sorting_source import sorting_source_cl
+from .sorting_source import sorting_source_cl
 import json
 from string import digits as strdg
 

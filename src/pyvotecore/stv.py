@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from abstract_classes import MultipleWinnerVotingSystem
+from .abstract_classes import MultipleWinnerVotingSystem
 from collections import defaultdict
-from common_functions import matching_keys
+from .common_functions import matching_keys
 import copy
 import math
 
