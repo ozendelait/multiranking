@@ -145,7 +145,7 @@ class sorting_cityscapes_semantics(sorting_source_cl):
     
 class sorting_scannet_semantics(sorting_source_cl):
     def base_url(self):
-        return "http://dovahkiin.stanford.edu/adai"
+        return "http://kaldir.vc.in.tum.de/scannet_benchmark/semantic_label_2d"
     def name(self):
         return "scannet_sem"
     def get_rows(self, soup):
@@ -155,7 +155,7 @@ class sorting_scannet_semantics(sorting_source_cl):
     
 class sorting_scannet_instance(sorting_source_cl):
     def base_url(self):
-        return "http://dovahkiin.stanford.edu/adai"
+        return "http://kaldir.vc.in.tum.de/scannet_benchmark/semantic_instance_2d"
     def name(self):
         return "scannet_inst"
     def get_rows(self, soup):
@@ -400,11 +400,12 @@ class sorting_wilddash_prototype(sorting_source_cl):
     def get_values(self, soup, version):
         vals = json.loads(soup.text)
         get_vals = {}
+        transl_rem_digits = {ord(d):'' for d in strdg}
         for f in vals["results"]:
             if not self.access_elem in f:
                 continue
             fr_name = f[self.access_elem]
-            fr_name = str(fr_name).translate(None, strdg) #remove unnecessary postfixes
+            fr_name = str(fr_name).translate(transl_rem_digits) #remove unnecessary postfixes
             if fr_name in self.eval_framesets and not f["value"] is None:
                 val_name = version +"_"+ fr_name
                 if not f[self.algo_disp_name] in get_vals:
@@ -412,7 +413,7 @@ class sorting_wilddash_prototype(sorting_source_cl):
                     get_vals[f[self.algo_disp_name]] = n_entry
                 else:
                     get_vals[f[self.algo_disp_name]][val_name] = f["value"]
-        #for algo, vals in get_vals.iteritems():
+        #for algo, vals in get_vals.items():
         #    for e in self.eval_framesets:
         #        check_v = version +"_"+ e
         #        if not check_v in vals:
@@ -461,7 +462,7 @@ def get_all_sources_rob18():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
     all_mvs_sources = [sorting_middlb_mvs(), sorting_eth3d_low_mvs(), sorting_eth3d_high_mvs()]
-    all_depth_sources = [sorting_kitti_depth(), sorting_scannet_depth()]
+    all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
     all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_scannet_semantics(), sorting_wilddash_semantics()]
     all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_scannet_instance(), sorting_wilddash_instance()]
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("mvs", all_mvs_sources),
