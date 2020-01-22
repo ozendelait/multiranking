@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup
-import requests, os, codecs, logging
+import requests, os, codecs, logging, zipfile
 from . import csv_tools as ct
+
+#make sure to set the environment variable KAGGLE_CONFIG_DIR correctly and place kaggle.json there
+from kaggle.api.kaggle_api_extended import KaggleApi
+from kaggle.api_client import ApiClient
 
 html_raw_postfix = "_raw"
 csv_raw_postfix = "_raw"
@@ -10,6 +14,7 @@ rank_prefix = "rank"
 logging.basicConfig(level=logging.INFO)
 logger_name = __name__ + "combined"
 rclogger = None
+kaggle_api_obj = None
 
 #initializes logging
 def setup_logging(log_file):
@@ -28,9 +33,31 @@ def setup_logging(log_file):
     return rclogger
 
 def save_html_dataset(url, trg_path):
+    global kaggle_api_obj
     rclogger = setup_logging(None)
+    call_kapi =  url.startswith("kaggle://")
     try:
         rclogger.info("Requesting online resource url "+ url)
+        if call_kapi:
+            tmpdir = trg_path.replace(".html","_tmpd")
+            if kaggle_api_obj is None:
+                kaggle_api_obj = KaggleApi(ApiClient())
+                kaggle_api_obj.authenticate()
+            kaggle_api_obj.competition_leaderboard_download(competition=url[len("kaggle://"):], path=tmpdir, quiet=True)
+            zip_downl = os.listdir(tmpdir)[0]
+            if zip_downl.endswith(".zip"):
+                zip_downl = os.path.join(tmpdir,zip_downl)
+                with zipfile.ZipFile(zip_downl,"r") as zip_extr:
+                    zip_extr.extractall(tmpdir)
+                os.remove(zip_downl) #all results are zipped later anyways
+            csv_downl = os.listdir(tmpdir)[0]
+            if csv_downl.endswith(".csv"):
+                csv_downl = os.path.join(tmpdir,csv_downl)
+                if os.path.exists(trg_path):
+                    os.remove(trg_path)
+                os.rename(csv_downl,trg_path)
+                os.rmdir(tmpdir)
+                return True
         html_doc = requests.get(url, verify=False, timeout=10.0).text
     except Exception as e:
         rclogger.error("Failed to open url "+ url + " Exception: "+ str(e))
@@ -47,7 +74,9 @@ def get_csv_datasets(src, url_id, html_path, csv_path, only_subset=True ):
     rclogger = setup_logging(None)
     all_vals = {}
     try:
-        soup = BeautifulSoup(open(html_path), 'html.parser')
+        soup = src.call_api(url_id, html_path)
+        if soup is None:
+            soup = BeautifulSoup(open(html_path), 'html.parser')
         all_rows = src.get_rows(soup)
     except Exception as e:
         rclogger.error("Could not load html file for parsing " + html_path)

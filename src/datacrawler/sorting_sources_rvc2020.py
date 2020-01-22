@@ -2,6 +2,7 @@
 from .sorting_source import sorting_source_cl
 import json
 from string import digits as strdg
+from . import csv_tools as ct
 
 class sorting_sintel_flow(sorting_source_cl):
     def base_url(self):
@@ -423,7 +424,7 @@ class sorting_wilddash_prototype(sorting_source_cl):
 class sorting_wilddash_instance(sorting_wilddash_prototype):
     expect_suffix = "2"
     def base_url(self):
-        return "http://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
+        return "https://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
     def name(self):
         return "wilddash_inst"
     def formats(self):
@@ -434,7 +435,7 @@ class sorting_wilddash_instance(sorting_wilddash_prototype):
 
 class sorting_wilddash_semantics(sorting_wilddash_prototype):
     def base_url(self):
-        return "http://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&frame_sets=summary_average&metrics={metrics}"
+        return "https://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&frame_sets=summary_average&metrics={metrics}"
     def name(self):
         return "wilddash_sem"
     def formats(self):
@@ -442,9 +443,15 @@ class sorting_wilddash_semantics(sorting_wilddash_prototype):
     def format_subset(self):
         return {"metrics" : {"iou_category","iou_class", "iou_category", "iiou_class", "iiou_category"}}
 
-class sorting_oid_obj(sorting_source_cl):
+
+class sorting_kaggle_template(sorting_source_cl):
+    def call_api(self, version, path):
+        return ct.load_from_csv(path, "TeamName", order_name=None)
+        
+        
+class sorting_oid_obj(sorting_kaggle_template):
     def base_url(self):
-        return "https://www.kaggle.com/c/open-images-2019-object-detection/leaderboard"
+        return "kaggle://open-images-2019-object-detection"
     def name(self):
         return "oid_o"
     #def formats(self):

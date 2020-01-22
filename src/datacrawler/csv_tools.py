@@ -19,7 +19,7 @@ def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None
     all_vals = {}
 
     try:
-        with io.open(csv_path, 'r', newline='\n') as inp_file:
+        with io.open(csv_path, 'r', encoding="utf8", newline='\n') as inp_file:
             all_lines = inp_file.readlines()
     except Exception as e:
         rclogger.error("Could not read csv file " + csv_path + "Exception: "+ str(e))
@@ -108,7 +108,7 @@ def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None
     if not order_name is None and not order_name in header_list:
         header_list = [order_name] + header_list
     
-    with io.open(res_file, 'w', newline='\n') as outfile:
+    with io.open(res_file, 'w', encoding="utf8", newline='\n') as outfile:
         outfile.write('"sep=' + seperator + '"\n')
         for header in header_list:
             outfile.write('%s;' % str(header))
