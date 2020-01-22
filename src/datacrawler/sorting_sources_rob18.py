@@ -440,7 +440,22 @@ class sorting_wilddash_semantics(sorting_wilddash_prototype):
         return {"metrics" : {"iou_class", "iou_category", "iiou_class", "iiou_category"}}
     def format_subset(self):
         return {"metrics" : {"iou_category","iou_class", "iou_category", "iiou_class", "iiou_category"}}
-    
+
+class sorting_oid_obj(sorting_source_cl):
+    def base_url(self):
+        return "https://www.kaggle.com/c/open-images-2019-object-detection/leaderboard"
+    def name(self):
+        return "oid_o"
+    #def formats(self):
+    #    return {"pass" : {"0", "1"} }  # 0 == Final; 1 == Clean
+    def get_rows(self, soup):
+        all_tr = soup.find_all("table")[0].find_all("tr")[1:]
+        return all_tr
+    def get_relevant_td(self, version=""):
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("EPEall", 1, "float", True, 1), self.TDEntry("EPEmatched", 2, "float", True, 1), 
+                self.TDEntry("EPEunmatched", 3, "float", True, 1),  self.TDEntry("d0-10", 4, "float", True, 1),   self.TDEntry("d10-60", 5, "float", True, 1), 
+                self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1), self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)] 
+         
 
 def get_all_sources_rob18():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]

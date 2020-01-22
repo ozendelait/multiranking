@@ -16,6 +16,7 @@ if __name__ == "__main__":
     name_joined_rank = "joined_"+dc.rank_prefix
     #all_sources = dc.get_all_sources_rob18()
     all_sources = [("flow", [dc.sorting_sintel_flow(), dc.sorting_hd1k_flow()])]
+    #all_sources = [("object_detection", [dc.sorting_oid_obj()])]
     #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
     
     #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_scannet_semantics(), dc.sorting_wilddash_semantics()])]
