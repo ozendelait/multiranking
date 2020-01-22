@@ -175,7 +175,7 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
         return []        
     
     tie_breaker_score = {}
-    for name, list_of_lists in method_rankings.iteritems():
+    for name, list_of_lists in method_rankings.items():
         curr_weight = weight_p_ranking.get(name,1)
         for idx,list_m in enumerate(list_of_lists):
             for m in list_m: #these share the same place

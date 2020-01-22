@@ -130,7 +130,7 @@ def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allo
     loaded_urls = []
     for src in all_sources:
         src_urls = src.all_urls(use_subset=only_subset)
-        for url_id, _ in src_urls.iteritems():
+        for url_id, _ in src_urls.items():
             csv_path = os.path.join(tmp_dir, url_id+csv_raw_postfix+".csv")
             loaded_urls.append(csv_path)
     
@@ -149,7 +149,7 @@ def calc_weight_per_benchmark(all_rankings, all_srcs, multiplier = 100):
     
     #max_id gets 1 vote
     wheight_per_benchmark = {}
-    for src_name,cnt in cnt_rankings.iteritems():
+    for src_name,cnt in cnt_rankings.items():
         if cnt == 0:
             continue
         score_each = int(float(cnt_rankings[max_id]*multiplier)/float(cnt)+0.5)
@@ -161,7 +161,7 @@ def calc_weight_per_benchmark(all_rankings, all_srcs, multiplier = 100):
 def get_all_rankings(all_vals, required_name = None):
     all_keys = set()
     all_rankings = set()
-    for _, vals in all_vals.iteritems():
+    for _, vals in all_vals.items():
         keys = vals.keys()
         all_keys = all_keys | set(keys)
         for k in keys:
@@ -172,7 +172,7 @@ def get_all_rankings(all_vals, required_name = None):
 
 def remove_incomplete(all_vals, check_list, whitelist):
     filtered_vals = {}
-    for method, vals in all_vals.iteritems():
+    for method, vals in all_vals.items():
         if not whitelist is None and not method in whitelist:
             continue
         all_entries_found = True
@@ -211,7 +211,7 @@ def normalize_rankings(all_vals, all_rankings, add_old_rank = False):
     rclogger = setup_logging(None)
     for r_name in all_rankings:
         calc_sort = []
-        for name, vals in all_vals.iteritems():
+        for name, vals in all_vals.items():
             if r_name in vals:
                 calc_sort.append((int(vals[r_name]),name))
         if len(calc_sort) <= 0:

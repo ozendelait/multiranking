@@ -72,7 +72,7 @@ def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None
 
 def get_all_keys(all_vals):
     all_keys = set()
-    for _, vals in all_vals.iteritems():
+    for _, vals in all_vals.items():
         all_keys |= set(vals.keys())
     return sorted(list(all_keys))
 
@@ -159,11 +159,11 @@ def join_csv_files(csv_paths, column_id, rclogger = None, allow_fuzzy_namecmp = 
     all_vals = {}
     for csv_path in csv_paths:
         vals_csv = load_from_csv(csv_path, column_id= column_id, order_name=None, rclogger = rclogger)
-        for id0_orig, vals in vals_csv.iteritems():
+        for id0_orig, vals in vals_csv.items():
             id0 = res_name_fuzzy_cmp(id0_orig,allow_fuzzy_namecmp)
             vals[column_id] = id0_orig
             if id0 in all_vals:
-                for name, val in vals.iteritems():
+                for name, val in vals.items():
                     old_val = None
                     if name in all_vals[id0]:
                         old_val = all_vals[id0][name]

@@ -41,11 +41,11 @@ class CondorcetHelper(object):
                 ballot["ballot"] = new_ballot
         elif ballot_notation == CondorcetHelper.BALLOT_NOTATION_RANKING:
             for ballot in self.ballots:
-                for candidate, rating in ballot["ballot"].iteritems():
+                for candidate, rating in ballot["ballot"].items():
                     ballot["ballot"][candidate] = -float(rating)
         elif ballot_notation == CondorcetHelper.BALLOT_NOTATION_RATING or ballot_notation is None:
             for ballot in self.ballots:
-                for candidate, rating in ballot["ballot"].iteritems():
+                for candidate, rating in ballot["ballot"].items():
                     ballot["ballot"][candidate] = float(rating)
         else:
             raise Exception("Unknown notation specified", ballot_notation)

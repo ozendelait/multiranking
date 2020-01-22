@@ -209,7 +209,7 @@ class sorting_source_cl:
         
         param_name = rank_prefix+"_"+find_name    
         rankings[find_name] = []
-        for key,v in all_vals.iteritems():
+        for key,v in all_vals.items():
             if find_name in v:
                 rankings[find_name].append((key,v[find_name]))
 

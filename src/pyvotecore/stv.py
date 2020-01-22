@@ -133,7 +133,7 @@ class STV(MultipleWinnerVotingSystem):
         for ballot in ballots:
             if ballot["ballot"]:
                 tallies[ballot["ballot"][0]] += ballot["count"]
-        return dict((candidate, votes) for (candidate, votes) in tallies.iteritems())
+        return dict((candidate, votes) for (candidate, votes) in tallies.items())
 
     @staticmethod
     def droop_quota(ballots, seats=1):

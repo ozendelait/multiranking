@@ -28,12 +28,12 @@ class SchulzeMethodByGraph(SchulzeMethod):
 
     def standardize_ballots(self, ballots, ballot_notation):
         self.ballots = []
-        self.candidates = set([edge[0] for edge, weight in self.edges.iteritems()]) | set([edge[1] for edge, weight in self.edges.iteritems()])
+        self.candidates = set([edge[0] for edge, weight in self.edges.items()]) | set([edge[1] for edge, weight in self.edges.items()])
 
     def ballots_into_graph(self, candidates, ballots):
         graph = digraph()
         graph.add_nodes(candidates)
-        for edge in self.edges.iteritems():
+        for edge in self.edges.items():
             graph.add_edge(edge[0], edge[1])
         return graph
 
