@@ -458,14 +458,13 @@ class sorting_oid_obj(sorting_source_cl):
                 self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1), self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)] 
          
 
-def get_all_sources_rob18():
+def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
-    all_mvs_sources = [sorting_middlb_mvs(), sorting_eth3d_low_mvs(), sorting_eth3d_high_mvs()]
     all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_scannet_semantics(), sorting_wilddash_semantics()]
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_scannet_instance(), sorting_wilddash_instance()]
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("mvs", all_mvs_sources),
+    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash_semantics()] #sorting_scannet_semantics(),
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash_instance()] #sorting_scannet_instance(),
+    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), 
                    ("depth", all_depth_sources), ("semantic", all_semantic_sources), ("instance", all_instance_sources)]
     return all_sources
     

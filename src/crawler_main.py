@@ -7,19 +7,18 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     #Parameters changing way that multi-ranking is applied
-    read_only = 1 #0: fetch online data, calc csv and multi-ranks, 1: only calc csv and multi-ranks, 2: only calc multi-ranks
+    read_only = 0 #0: fetch online data, calc csv and multi-ranks, 1: only calc csv and multi-ranks, 2: only calc multi-ranks
     batchsize_calc = 10 # speed vs. accuracy of multijoiner; values over 10 are not recommended (very long execution times); -1 turns iterative process off -> can take forever
     max_sort_calc = 10 #20 # sprevents long calcuations for multijoiner; after sorting max_sort_calc entries, the remaining entries are quickly sorted by their mean ranks
     only_subset = True # calculate joined ranking over defined subsets instead of all available rankings
     allow_fuzzy_namecmp = 0 # 0: compare names exact, 1: ignore case, 2: ignore any non-alphanumeric character
     
     name_joined_rank = "joined_"+dc.rank_prefix
-    all_sources = dc.get_all_sources_rob18()
+    all_sources = dc.get_all_sources_rvc2020()
     #all_sources = [("flow", [dc.sorting_sintel_flow(), dc.sorting_hd1k_flow()])]
     #all_sources = [("object_detection", [dc.sorting_oid_obj()])]
     #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
-    
-    #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_scannet_semantics(), dc.sorting_wilddash_semantics()])]
+    all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_wilddash_semantics()])]
     white_list = None
     
     if len(sys.argv) > 1:
