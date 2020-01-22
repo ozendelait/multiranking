@@ -2,7 +2,7 @@ import copy, logging
 from pyvotecore import schulze_pr
 from pyvotecore import schulze_stv
 from pyvotecore import condorcet
-from sklearn.metrics import ranking
+#from sklearn.metrics import ranking
 
 logging.basicConfig(level=logging.INFO)
 def iterative_schulz(input_rankings, num_per_iter, max_calc = -1, tie_breakers=None, rclogger = None):
