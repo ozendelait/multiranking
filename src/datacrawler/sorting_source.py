@@ -1,5 +1,6 @@
 from .datacrawler import column_id
 from .datacrawler import rank_prefix
+import json
 
 class sorting_source_cl:
     #extracted from <td> elements from <tr> nodes taken from html tables
@@ -67,6 +68,54 @@ class sorting_source_cl:
             curr_urls = next_urls
         return curr_urls
         
+    def clean_val_tde(self, name, val, tde):           
+        if val is None:
+            raise Exception("Invalid row; could not find position "+str(tde.pos)+ "("+name+")") # this should not happen          
+        
+        #extract from within <strong> / <b> tags
+        for tag in ["strong>", "b>"]:
+            mstr = val.split(tag)
+            if len(mstr) > 2 and mstr[1][-2:]=="</":
+                val = mstr[1][0:-2].strip()
+                break
+        
+        if tde.ptype == "percentage":
+            val = float(val.replace(u"%",u""))*0.01
+        elif tde.ptype == "time":
+            try:
+                if val.find('min') >= 0:
+                    val = float(val.replace(u"min",u""))* 60.0
+                elif val.find('ms') >= 0:
+                    val = float(val.replace(u"ms",u"")) * 0.001
+                else:
+                    val = float(val.replace(u"s",u""))
+            except ValueError:
+                val = -1
+        elif tde.ptype == "date-us6":
+            val = '20'+val[6:8]+'-'+val[0:2]+'-'+val[3:5]
+        elif tde.ptype == "integer":
+            val = int(val)
+        elif tde.ptype == "float":
+            val = val.replace("px","")
+            val = float(val)
+        else:
+            val = val.strip()
+        #make column_id unique
+        if name == self.column_id:
+            #remove reference tags
+            pos_br0 = val.rfind('[')
+            pos_br1 = val.rfind(']')
+            if pos_br0 > 0 and pos_br1 > pos_br0+1:
+                extr_id_str = val[pos_br0+1:pos_br1]
+                try:
+                    if int(extr_id_str) >= 0  :
+                        val = val[0:pos_br0].strip()
+                except:
+                    pass
+            #fix strange unicode chars
+            val = val.replace(u'\u039c',"M") #greek M 
+        return val
+        
     def get_values(self, soap1, version, line=-1):
         #needed to fix a strange BeautifulSoup shortcoming
         def remove_tag(val, tag):
@@ -77,7 +126,7 @@ class sorting_source_cl:
             if td1 > td0 and td0 >= 0:
                 return val[td0+1:td1].strip()
             return val
-    
+        
         all_vals = {}
         if not soap1.find('td', class_ = 'results_sub') is None:
             raise ValueError('Skip invalid row') #skip whole row
@@ -85,7 +134,6 @@ class sorting_source_cl:
         if len(entries) <= 0 or (len(entries) == 1 and entries[0].has_attr('colspan') and int(entries[0]['colspan']) > 2):
             raise ValueError('Skip invalid row') #skip whole row
         for tde in self.get_relevant_td(version, line):
-            val = None
             name = self.param_name(tde, version)
             sub_pos = 0
             if isinstance(tde.pos, float):
@@ -116,53 +164,7 @@ class sorting_source_cl:
                         val = tag0.string
                         if not val is None:
                             break
-                
-            if val is None:
-                raise Exception("Invalid row; could not find position "+str(tde.pos)+ "("+name+")") # this should not happen          
-            
-            #extract from within <strong> / <b> tags
-            for tag in ["strong>", "b>"]:
-                mstr = val.split(tag)
-                if len(mstr) > 2 and mstr[1][-2:]=="</":
-                    val = mstr[1][0:-2].strip()
-                    break
-            
-            if tde.ptype == "percentage":
-                val = float(val.replace(u"%",u""))*0.01
-            elif tde.ptype == "time":
-                try:
-                    if val.find('min') >= 0:
-                        val = float(val.replace(u"min",u""))* 60.0
-                    elif val.find('ms') >= 0:
-                        val = float(val.replace(u"ms",u"")) * 0.001
-                    else:
-                        val = float(val.replace(u"s",u""))
-                except ValueError:
-                    val = -1
-            elif tde.ptype == "date-us6":
-                val = '20'+val[6:8]+'-'+val[0:2]+'-'+val[3:5]
-            elif tde.ptype == "integer":
-                val = int(val)
-            elif tde.ptype == "float":
-                val = val.replace("px","")
-                val = float(val)
-            else:
-                val = val.strip()
-            #make column_id unique
-            if name == self.column_id:
-                #remove reference tags
-                pos_br0 = val.rfind('[')
-                pos_br1 = val.rfind(']')
-                if pos_br0 > 0 and pos_br1 > pos_br0+1:
-                    extr_id_str = val[pos_br0+1:pos_br1]
-                    try:
-                        if int(extr_id_str) >= 0  :
-                            val = val[0:pos_br0].strip()
-                    except:
-                        pass
-                #fix strange unicode chars
-                val = val.replace(u'\u039c',"M") #greek M 
-            all_vals[name] = val
+            all_vals[name] = self.clean_val_tde(name, val, tde)
         return all_vals
     
     def has_ranking(self, version):
@@ -227,4 +229,21 @@ class sorting_source_cl:
             last_val = v
         return all_vals
             
+class sorting_source_json(sorting_source_cl):
+    def get_rows(self, soup): # no standard <tr><td> schema but uses json
+        return json.loads(soup.text)
+    def get_values(self, json1, version, line=-1):
+        all_vals = {}
+        for tde in self.get_relevant_td(version, line):
+            name = self.param_name(tde, version)
+            pos_all = tde.pos
+            if not isinstance(tde.pos, list):
+                pos_all = [tde.pos]
+            val = json1[pos_all[0]]
+            for subname in pos_all[1:]:
+                if isinstance(val, str): #fix faulty json saving dict as str
+                    val=json.loads(val)
+                val = val[subname]
+            all_vals[name] = self.clean_val_tde(name, str(val), tde)
+        return all_vals
             

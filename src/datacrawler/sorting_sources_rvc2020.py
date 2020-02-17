@@ -1,5 +1,5 @@
 #Hint: escape forward slashes (char '/') using %2F; otherwise the automatic naming for html/csv files will fail
-from .sorting_source import sorting_source_cl
+from .sorting_source import sorting_source_cl, sorting_source_json
 import json
 from string import digits as strdg
 from . import csv_tools as ct
@@ -481,6 +481,137 @@ class sorting_ade20k_semantics(sorting_source_cl):
                 self.TDEntry("acc", 2, "float", False, -1), self.TDEntry("iou", 3, "float", False, -1), 
                 self.TDEntry("score", 4, "float", False,-1), self.TDEntry("submtime", 5, "time", False)]
 
+class sorting_viper_semantics(sorting_source_cl):
+    def base_url(self):
+        return "https://playing-for-benchmarks.org/leaderboards/seg_cls_img/"
+    def name(self):
+        return "viper_sem"
+    def get_rows(self, soup):
+        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"), 
+                self.TDEntry("iou-all", 2, "float", False, -1),
+                self.TDEntry("iou-day", 3, "float", False, -1),
+                self.TDEntry("iou-sunset", 4, "float", False, -1),
+                self.TDEntry("iou-rain", 5, "float", False, -1),
+                self.TDEntry("iou-snow", 6, "float", False, -1),
+                self.TDEntry("iou-night", 7, "float", False, -1),
+                self.TDEntry("runtime", 8, "time", False)]
+
+class sorting_viper_instance(sorting_source_cl):
+    def base_url(self):
+        return "https://playing-for-benchmarks.org/leaderboards/seg_inst_img/"
+    def name(self):
+        return "viper_inst"
+    def get_rows(self, soup):
+        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"), 
+                self.TDEntry("ap-all", 2, "float", False, -1),
+                self.TDEntry("ap-day", 3, "float", False, -1),
+                self.TDEntry("ap-sunset", 4, "float", False, -1),
+                self.TDEntry("ap-rain", 5, "float", False, -1),
+                self.TDEntry("ap-snow", 6, "float", False, -1),
+                self.TDEntry("ap-night", 7, "float", False, -1),
+                self.TDEntry("runtime", 8, "time", False)]
+
+class sorting_coco_objdet(sorting_source_json):
+    def base_url(self):
+        return "http://cocodataset.org/leaderboard/bbox_{track}.json"
+    def name(self):
+        return "coco_obj"
+    def formats(self):
+        #TODO: check significance of "segm_dev2015", "segm_standard2015", "segm_challenge2016", "segm_challenge2017", "segm_challenge2018"
+        return {"track" : {"dev2015", "standard2015", "challenge2016", "challenge2017"}}
+    def format_subset(self):
+        return {"track" : {"challenge2017"}}
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
+                self.TDEntry("ap-all", ["results","AP"], "float", False, -1),
+                self.TDEntry("ap-50", ["results","AP_50"], "float", False, -1),
+                self.TDEntry("ap-75", ["results","AP_75"], "float", False, -1),
+                self.TDEntry("ap-s", ["results","AP_small"], "float", False, -1),
+                self.TDEntry("ap-m", ["results","AP_medium"], "float", False, -1),
+                self.TDEntry("ap-l", ["results","AP_large"], "float", False, -1),
+                self.TDEntry("ar-1", ["results","AR_max_1"], "float", False, -1),
+                self.TDEntry("ar-10", ["results","AR_max_10"], "float", False, -1),
+                self.TDEntry("ar-100", ["results","AR_max_100"], "float", False, -1),
+                self.TDEntry("ar-s", ["results","AR_small"], "float", False, -1),
+                self.TDEntry("ar-m", ["results","AR_medium"], "float", False, -1),
+                self.TDEntry("ar-l", ["results","AR_large"], "float", False, -1),
+                self.TDEntry("date", ["date"], "date-iso", False)
+                ]
+        
+class sorting_coco_semantics(sorting_source_json):
+    def base_url(self):
+        return "http://cocodataset.org/leaderboard/stuff_{track}.json"
+    def name(self):
+        return "coco_sem"
+    def formats(self):
+        return {"track" : {"dev2017", "challenge2017", "dev2018"}}
+    def format_subset(self):
+        return {"track" : {"dev2018"}}
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
+                self.TDEntry("miou", ["results","MIOU"], "float", False, -1),
+                self.TDEntry("fiou", ["results","FIOU"], "float", False, -1),
+                self.TDEntry("macc", ["results","MACC"], "float", False, -1),
+                self.TDEntry("pacc", ["results","PACC"], "float", False, -1),
+                self.TDEntry("miou-s", ["results","MIOUS"], "float", False, -1),
+                self.TDEntry("fiou-s", ["results","FIOUS"], "float", False, -1),
+                self.TDEntry("macc-s", ["results","MACCS"], "float", False, -1),
+                self.TDEntry("pacc-s", ["results","PACCS"], "float", False, -1),
+                self.TDEntry("date", ["date"], "date-iso", False)
+                ]
+
+class sorting_coco_instance(sorting_source_json):
+    def base_url(self):
+        return "http://cocodataset.org/leaderboard/segm_{track}.json"
+    def name(self):
+        return "coco_obj"
+    def formats(self):
+        return {"track" : {"dev2015", "standard2015", "challenge2016", "challenge2017", "challenge2018"}}
+    def format_subset(self):
+        return {"track" : {"challenge2018"}}
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
+                self.TDEntry("ap-all", ["results","AP"], "float", False, -1),
+                self.TDEntry("ap-50", ["results","AP_50"], "float", False, -1),
+                self.TDEntry("ap-75", ["results","AP_75"], "float", False, -1),
+                self.TDEntry("ap-s", ["results","AP_small"], "float", False, -1),
+                self.TDEntry("ap-m", ["results","AP_medium"], "float", False, -1),
+                self.TDEntry("ap-l", ["results","AP_large"], "float", False, -1),
+                self.TDEntry("ar-1", ["results","AR_max_1"], "float", False, -1),
+                self.TDEntry("ar-10", ["results","AR_max_10"], "float", False, -1),
+                self.TDEntry("ar-100", ["results","AR_max_100"], "float", False, -1),
+                self.TDEntry("ar-s", ["results","AR_small"], "float", False, -1),
+                self.TDEntry("ar-m", ["results","AR_medium"], "float", False, -1),
+                self.TDEntry("ar-l", ["results","AR_large"], "float", False, -1),
+                self.TDEntry("date", ["date"], "date-iso", False)
+                ]
+        
+class sorting_coco_panoptic(sorting_source_json):
+    def base_url(self):
+        return "http://cocodataset.org/leaderboard/panoptic_{track}.json"
+    def name(self):
+        return "coco_obj"
+    def formats(self):
+        return {"track" : {"challenge2018","challenge2019", "dev"}}
+    def format_subset(self):
+        return {"track" : {"challenge2019"}}
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
+                self.TDEntry("pq", ["results","PQ"], "float", False, -1),
+                self.TDEntry("sq", ["results","SQ"], "float", False, -1),
+                self.TDEntry("rq", ["results","RQ"], "float", False, -1),
+                self.TDEntry("pq-th", ["results","PQTH"], "float", False, -1),
+                self.TDEntry("rq-th", ["results","RQTH"], "float", False, -1),
+                self.TDEntry("sq-th", ["results","SQTH"], "float", False, -1),
+                self.TDEntry("pq-st", ["results","PQST"], "float", False, -1),
+                self.TDEntry("sq-st", ["results","SQST"], "float", False, -1),
+                self.TDEntry("rq-st", ["results","RQST"], "float", False, -1),
+                self.TDEntry("date", ["date"], "date-iso", False)
+                ]
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
@@ -515,8 +646,8 @@ def get_all_sources_rvc2020():
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
     all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
     all_objdet_sources = [sorting_objects365_obj(),sorting_oid_obj()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash_semantics()] #sorting_scannet_semantics(),
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash_instance()] #sorting_scannet_instance(),
+    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics()]
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash_instance(), sorting_viper_instance(), sorting_scannet_instance()]
     all_panoptic_sources = [sorting_cityscapes_panoptic()] #sorting_kitti_panoptic(), sorting_wilddash_panoptic()
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 
