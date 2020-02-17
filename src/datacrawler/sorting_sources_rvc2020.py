@@ -139,7 +139,7 @@ class sorting_scannet_semantics(sorting_source_cl):
     def name(self):
         return "scannet_sem"
     def get_rows(self, soup):
-        return soup.find_all("table", class_="table-condensed")[1].find_all("tr")
+        return soup.find_all("table", class_="table-condensed")[0].find_all("tr")
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-iou", 2, "float", False, -1)]
     
@@ -149,7 +149,7 @@ class sorting_scannet_instance(sorting_source_cl):
     def name(self):
         return "scannet_inst"
     def get_rows(self, soup):
-        return soup.find_all("table", class_="table-condensed")[2].find_all("tr")
+        return soup.find_all("table", class_="table-condensed")[0].find_all("tr")
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-ag", 2, "float", False, -1)]
 
