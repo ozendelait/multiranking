@@ -69,10 +69,13 @@ def get_csv_datasets(src, url_id, html_path, csv_path, only_subset=True):
     rclogger = setup_logging(None)
     all_vals = {}
     try:
-        soup = BeautifulSoup(open(html_path), 'html.parser')
+        soup = BeautifulSoup(open(html_path, 'rb'), 'html.parser', from_encoding='utf-8')
         all_rows = src.get_rows(soup)
     except Exception as e:
-        rclogger.error("Could not load html file for parsing " + html_path)
+        excp_str = str(e)
+        if len(excp_str) > 128:
+            excp_str = excp_str[:128]+'...'
+        rclogger.error("Could not load html file for parsing " + html_path + "; Exception: " + excp_str)
         return all_vals
     ranking_name = src.rank_prefix + "_" + url_id
     rowidx = 2
@@ -84,7 +87,7 @@ def get_csv_datasets(src, url_id, html_path, csv_path, only_subset=True):
     else:
         for idx, row in enumerate(all_rows):
             try:
-                vals = src.get_values(row, url_id)
+                vals = src.get_values(row, url_id, idx)
                 if not existing_ranking:
                     vals[ranking_name] = rowidx
                 if not column_id in vals:

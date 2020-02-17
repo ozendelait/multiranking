@@ -44,7 +44,7 @@ class sorting_source_cl:
                 all_sortings.append((tde.name, int(tde.needs_ranking) < 0))
         return all_sortings
     
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return []
         
     def all_urls(self, use_subset=False):
@@ -67,7 +67,7 @@ class sorting_source_cl:
             curr_urls = next_urls
         return curr_urls
         
-    def get_values(self, soap1, version):
+    def get_values(self, soap1, version, line=-1):
         #needed to fix a strange BeautifulSoup shortcoming
         def remove_tag(val, tag):
             td0 = val.find('<'+tag)
@@ -84,7 +84,7 @@ class sorting_source_cl:
         entries = soap1.find_all('td')
         if len(entries) <= 0 or (len(entries) == 1 and entries[0].has_attr('colspan') and int(entries[0]['colspan']) > 2):
             raise ValueError('Skip invalid row') #skip whole row
-        for tde in self.get_relevant_td(version):
+        for tde in self.get_relevant_td(version, line):
             val = None
             name = self.param_name(tde, version)
             sub_pos = 0

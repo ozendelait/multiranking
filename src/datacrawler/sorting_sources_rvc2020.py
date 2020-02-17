@@ -14,7 +14,7 @@ class sorting_sintel_flow(sorting_source_cl):
     def get_rows(self, soup):
         all_tr = soup.find_all("table")[0].find_all("tr")[1:]
         return all_tr
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("EPEall", 1, "float", True, 1), self.TDEntry("EPEmatched", 2, "float", True, 1), 
                 self.TDEntry("EPEunmatched", 3, "float", True, 1),  self.TDEntry("d0-10", 4, "float", True, 1),   self.TDEntry("d10-60", 5, "float", True, 1), 
                 self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1), self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)] 
@@ -44,7 +44,7 @@ class sorting_middlb_flow(sorting_source_cl):
             elif(first_idx >= 0):
                 break
         return rows
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avrg_rnk", 1, "float", True, 1)]  # TODO: add scores from images
         
 class sorting_middlb_mvs(sorting_source_cl):
@@ -61,7 +61,7 @@ class sorting_middlb_mvs(sorting_source_cl):
                 for metr, sort_desc in [("c125", True), ("a90", False)]: #TODO: here one can use other thresholds as well
                     addrankings.append((version+"_"+ds+var+"_"+metr, sort_desc))
         return addrankings
-    def get_values(self, soup, version):
+    def get_values(self, soup, version, line=-1):
         rows = soup.contents[0].split('\n')
         get_vals = {}
         for idx, r in enumerate(rows):
@@ -90,7 +90,7 @@ class sorting_hd1k_flow(sorting_source_cl):
         val_name = version + "_val"
         desc_sortings = {'hd1k_f-sparsity':True}
         return [(val_name, desc_sortings.get(version,False))]
-    def get_values(self, soup, version):
+    def get_values(self, soup, version, line=-1):
         vals = json.loads(soup.text)
         val_name = version + "_val" 
         get_vals = {}
@@ -129,21 +129,10 @@ class sorting_middlb_stereov3(sorting_source_cl):
             elif(first_idx >= 0):
                 break
         return rows
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, "algName", "string"), self.TDEntry(self.rank_prefix, ["rank wtavg", "rank wtavg firstPlace"], "integer"), 
                 self.TDEntry("wtavg", ["data wtavg", "data wtavg firstPlace"], "float"), self.TDEntry("date", "date", "date-us6", False)]  # TODO: add individual image results 
-        
-class sorting_cityscapes_semantics(sorting_source_cl):
-    def base_url(self):
-        return "https://www.cityscapes-dataset.com/benchmarks"
-    def name(self):
-        return "cityscapes_sem"
-    def get_rows(self, soup):
-        return soup.find("table", class_="tablepress-id-2").find_all("tr")
-    def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("iou-class", 13, "float", False, -1), self.TDEntry("iiou-class", 14, "float", False, -1), 
-                self.TDEntry("iou-category", 15, "float", False, -1), self.TDEntry("iiou-category", 16, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
-    
+            
 class sorting_scannet_semantics(sorting_source_cl):
     def base_url(self):
         return "http://kaldir.vc.in.tum.de/scannet_benchmark/semantic_label_2d"
@@ -151,7 +140,7 @@ class sorting_scannet_semantics(sorting_source_cl):
         return "scannet_sem"
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-condensed")[1].find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-iou", 2, "float", False, -1)]
     
 class sorting_scannet_instance(sorting_source_cl):
@@ -161,7 +150,7 @@ class sorting_scannet_instance(sorting_source_cl):
         return "scannet_inst"
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-condensed")[2].find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-ag", 2, "float", False, -1)]
 
 class sorting_scannet_depth(sorting_source_cl):
@@ -171,9 +160,20 @@ class sorting_scannet_depth(sorting_source_cl):
         return "scannet_d"
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-condensed")[0].find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("abs-rel", 2, "float", False, 1), self.TDEntry("inv-mae", 3, "float", False, 1), 
                 self.TDEntry("inv-rmse", 4, "float", False, 1),  self.TDEntry("scale-invar", 9, "float", False, 1), self.TDEntry("sqr-rel", 10, "float", False, 1)]
+
+class sorting_cityscapes_semantics(sorting_source_cl):
+    def base_url(self):
+        return "https://www.cityscapes-dataset.com/benchmarks"
+    def name(self):
+        return "cityscapes_sem"
+    def get_rows(self, soup):
+        return soup.find("table", class_="tablepress-id-2").find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("iou-class", 13, "float", False, -1), self.TDEntry("iiou-class", 14, "float", False, -1), 
+                self.TDEntry("iou-category", 15, "float", False, -1), self.TDEntry("iiou-category", 16, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
 
 class sorting_cityscapes_instance(sorting_source_cl):
     def base_url(self):
@@ -182,9 +182,20 @@ class sorting_cityscapes_instance(sorting_source_cl):
         return "cityscapes_inst"
     def get_rows(self, soup):
         return soup.find("table", class_="tablepress-id-14").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("ap", 13, "float", False, -1), self.TDEntry("ap_50p", 14, "float", False, -1), 
                 self.TDEntry("ap_100m", 15, "float", False, -1), self.TDEntry("ap_50m", 16, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
+    
+class sorting_cityscapes_panoptic(sorting_source_cl):
+    def base_url(self):
+        return "https://www.cityscapes-dataset.com/benchmarks"
+    def name(self):
+        return "cityscapes_pan"
+    def get_rows(self, soup):
+        return soup.find("table", class_="tablepress-id-22").find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("pq", 13, "float", False, -1), self.TDEntry("sq", 14, "float", False, -1), 
+                self.TDEntry("rq", 15, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
     
 class sorting_kitti2015_stereo(sorting_source_cl):
     def base_url(self):
@@ -197,7 +208,7 @@ class sorting_kitti2015_stereo(sorting_source_cl):
         return { "eval_gt" : {"all", "noc"}, "eval_area" : {"all"}}
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("d1-bg", 4, "percentage", True, 1), self.TDEntry("d1-fg", 5, "percentage", True, 1), 
                 self.TDEntry("d1-all", 6, "percentage", True, 1), self.TDEntry("density", 7, "percentage", True), self.TDEntry("runtime", 8, "time", False)]
 
@@ -213,7 +224,7 @@ class sorting_kitti2012_stereo(sorting_source_cl):
         #return { "table" : {"all"}, "error" : {"3"}, "eval" : {"all"}}
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         td_std = [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("out-noc", 4, "percentage", True, 1), self.TDEntry("out-all", 5, "percentage", True, 1), 
                   self.TDEntry("avg-nocc", 6, "float", True, 1), self.TDEntry("avg-all", 7, "float", True, 1)]
         if not version is None and version.find("refl")>0 :
@@ -234,7 +245,7 @@ class sorting_kitti2015_flow(sorting_source_cl):
         return {"eval_gt" : {"all", "noc"}, "eval_area" : {"all"}}
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")[1:]
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("fl-bg", 4, "percentage", True, 1), self.TDEntry("fl-fg", 5, "percentage", True, 1), 
                 self.TDEntry("fl-all", 6, "percentage", True, 1), self.TDEntry("density", 7, "percentage", True), self.TDEntry("runtime", 8, "time", False)]
 
@@ -249,7 +260,7 @@ class sorting_kitti2012_flow(sorting_source_cl):
         return None
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")[1:]
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("out-noc", 4, "percentage", True, 1), self.TDEntry("out-all", 5, "percentage", True, 1), 
                 self.TDEntry("avg-noc", 6, "float", True, 1), self.TDEntry("avg-all", 7, "float", True, 1), self.TDEntry("density", 8, "percentage", True), self.TDEntry("runtime", 9, "time", False)]
 
@@ -261,7 +272,7 @@ class sorting_kitti_depth(sorting_source_cl):
         return "kitti_d"
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("sl-log", 4, "float", False,1), self.TDEntry("sq-error-rel", 5, "float", False, 1), 
                 self.TDEntry("abs-error-rel", 6, "float", False, 1), self.TDEntry("irmse", 7, "float", False, 1), self.TDEntry("runtime", 8, "time", False)]
 
@@ -272,7 +283,7 @@ class sorting_kitti_semantics(sorting_source_cl):
         return "kitti_sem"
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("iou-class", 4, "float", False, -1), 
                 self.TDEntry("iiou-class", 5, "float", False, -1), self.TDEntry("iou-category", 6, "float", False, -1), 
                 self.TDEntry("iiou-category", 7, "float", False,-1), self.TDEntry("runtime", 8, "time", False)]
@@ -284,9 +295,9 @@ class sorting_kitti_instance(sorting_source_cl):
         return "kitti_i"
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("ap", 4, "float", False,-1), self.TDEntry("ap50", 5, "float", False,-1), self.TDEntry("runtime", 6, "time", False)]
-        
+                
 class sorting_eth3d_stereo(sorting_source_cl):
     def base_url(self):
         return "https://www.eth3d.net/low_res_two_view?coverage={coverage}&set={set}&metric={metric}&mask={mask}"
@@ -308,7 +319,7 @@ class sorting_eth3d_stereo(sorting_source_cl):
             if js_cont.find('<a href="/result') >= 0:
                 rows.append(one_tr)
         return rows
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry(self.rank_prefix, 2.5, "string", True), self.TDEntry("val", 2, "float", True)]
 
 class sorting_eth3d_high_mvs(sorting_source_cl):
@@ -332,7 +343,7 @@ class sorting_eth3d_high_mvs(sorting_source_cl):
             if js_cont.find('<a href="/result') >= 0:
                 rows.append(one_tr)
         return rows
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         type0 = "percentage"
         sort_order = -1
         if version.find("time") >= 0:
@@ -362,7 +373,7 @@ class sorting_eth3d_low_mvs(sorting_source_cl):
             if js_cont.find('<a href="/result') >= 0:
                 rows.append(one_tr)
         return rows
-    def get_relevant_td(self, version=""):
+    def get_relevant_td(self, version="", line=-1):
         type0 = "percentage"
         sort_order = -1
         if version.find("time") >= 0:
@@ -398,7 +409,7 @@ class sorting_wilddash_prototype(sorting_source_cl):
             val_name = version +"_"+ f
             all_sortings.append((val_name, desc_sortings.get(version,True)))
         return all_sortings
-    def get_values(self, soup, version):
+    def get_values(self, soup, version, line=-1):
         vals = json.loads(soup.text)
         get_vals = {}
         transl_rem_digits = {ord(d):'' for d in strdg}
@@ -443,6 +454,33 @@ class sorting_wilddash_semantics(sorting_wilddash_prototype):
     def format_subset(self):
         return {"metrics" : {"iou_category","iou_class", "iou_category", "iiou_class", "iiou_category"}}
 
+class sorting_objects365_obj(sorting_source_cl):
+    def base_url(self):
+        return "https://www.objects365.org/{track}_track.html"
+    def name(self):
+        return "objects365_obj"
+    def formats(self):
+        return {"track" : {"tiny", "full"}}
+    def format_subset(self):
+        return {"track" : {"full"}}
+    def get_rows(self, soup):
+        return soup.find("div", class_="container").find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        start_col = 0 if line < 4 else 1 #the first three entries have another markup
+        return [self.TDEntry(self.column_id, start_col, "string"), self.TDEntry("institute", start_col+1, "string"), self.TDEntry("ap", start_col+2, "float", False, -1)]
+
+class sorting_ade20k_semantics(sorting_source_cl):
+    def base_url(self):
+        return "http://sceneparsing.csail.mit.edu/eval/leaderboard_iframe.php"
+    def name(self):
+        return "ade20k_sem"
+    def get_rows(self, soup):
+        return soup.find("table", {"id": "report"}).find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 0, "string"),self.TDEntry("affiliation", 1, "string"),
+                self.TDEntry("acc", 2, "float", False, -1), self.TDEntry("iou", 3, "float", False, -1), 
+                self.TDEntry("score", 4, "float", False,-1), self.TDEntry("submtime", 5, "time", False)]
+
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
@@ -453,7 +491,7 @@ class sorting_kaggle_template(sorting_source_cl):
         return None
     def needs_sortings(self, version):
         return [('score', False)]
-    def get_values(self, soup, version):
+    def get_values(self, soup, version, line=-1):
         vals = json.loads(soup.text)
         get_vals = {}
         for f in vals["submissions"]:
@@ -470,15 +508,18 @@ class sorting_oid_obj(sorting_kaggle_template):
     def base_url(self):
         return "kaggle://open-images-2019-object-detection"
     def name(self):
-        return "oid_o"         
+        return "oid_obj"         
 
 def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
     all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
+    all_objdet_sources = [sorting_objects365_obj(),sorting_oid_obj()]
     all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash_semantics()] #sorting_scannet_semantics(),
     all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash_instance()] #sorting_scannet_instance(),
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), 
-                   ("depth", all_depth_sources), ("semantic", all_semantic_sources), ("instance", all_instance_sources)]
+    all_panoptic_sources = [sorting_cityscapes_panoptic()] #sorting_kitti_panoptic(), sorting_wilddash_panoptic()
+    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
+                   ("objdet", all_objdet_sources), 
+                   ("semantic", all_semantic_sources), ("instance", all_instance_sources), ("panoptic", all_panoptic_sources)]
     return all_sources
     
