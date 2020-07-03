@@ -4,9 +4,10 @@ from bs4 import BeautifulSoup
 import requests, os, codecs, logging, json
 from . import csv_tools as ct
 
-# make sure to set the environment variable KAGGLE_CONFIG_DIR correctly and place kaggle.json there
-from kaggle.api.kaggle_api_extended import KaggleApi
-from kaggle.api_client import ApiClient
+if 'KAGGLE_CONFIG_DIR' in os.environ:
+    # make sure to set the environment variable KAGGLE_CONFIG_DIR correctly and place kaggle.json there
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    from kaggle.api_client import ApiClient
 
 html_raw_postfix = "_raw"
 csv_raw_postfix = "_raw"

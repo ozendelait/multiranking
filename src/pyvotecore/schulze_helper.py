@@ -112,7 +112,7 @@ class SchulzeHelper(CondorcetHelper):
             m = max(pattern.count(PREFERRED_SAME) for pattern in profile)
             if m == 0:
                 break
-            for pattern in profile.keys():
+            for pattern in list(profile.keys()):
                 if pattern.count(PREFERRED_SAME) == m:
                     self.proportional_completion_round(pattern, profile)
 

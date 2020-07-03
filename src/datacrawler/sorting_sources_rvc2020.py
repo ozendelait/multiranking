@@ -393,7 +393,8 @@ class sorting_wilddash_prototype(sorting_source_cl):
                       'particles_high', 'particles_none', 'particles_low',
                       'screen_high', 'screen_none', 'screen_low',
                       'underexp_high', 'underexp_none', 'underexp_low',
-                      'variations_high', 'variations_none', 'variations_low'] 
+                      'variations_high', 'variations_none', 'variations_low']
+    eval_framesets = ['average']
     algo_disp_name = "algorithm_display_name"
     access_elem = "label_class" # "frame_set"
     expect_suffix = None 
@@ -432,27 +433,38 @@ class sorting_wilddash_prototype(sorting_source_cl):
         #            print("Warning: did not get values for id "+e+" for algorithm "+algo)
         return get_vals
 
-class sorting_wilddash_instance(sorting_wilddash_prototype):
-    expect_suffix = "2"
+class sorting_wilddash2_instance(sorting_wilddash_prototype):
+    expect_suffix = "5"
     def base_url(self):
-        return "https://wilddash.cc/api/scores.json/?challenges=instance_rob&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
+        return "https://wilddash.cc/api/scores.json/?challenges=instance_rob_2020&limit=1000000&frame_sets=summary_average_weighted"+self.expect_suffix+"&metrics={metrics}"
     def name(self):
-        return "wilddash_inst"
+        return "wilddash2_inst"
     def formats(self):
-        return {"metrics" : {"ap", "ap50"}}
+        return {"metrics" : {"ap2", "ap502"}}
     def format_subset(self):
-        return  {"metrics" : {"ap", "ap50"}}
-    
+        return  {"metrics" : {"ap2", "ap502"}}
 
-class sorting_wilddash_semantics(sorting_wilddash_prototype):
+class sorting_wilddash2_panoptic(sorting_wilddash_prototype):
+    expect_suffix = "3"
     def base_url(self):
-        return "https://wilddash.cc/api/scores.json/?challenges=semantic_rob&limit=1000000&frame_sets=summary_average&metrics={metrics}"
+        return "https://wilddash.cc/api/scores.json/?challenges=panoptic_rob_2020&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
     def name(self):
-        return "wilddash_sem"
+        return "wilddash2_pano"
     def formats(self):
-        return {"metrics" : {"iou_class", "iou_category", "iiou_class", "iiou_category"}}
+        return {"metrics" : {"pq", "pq_cat"}}
     def format_subset(self):
-        return {"metrics" : {"iou_category","iou_class", "iou_category", "iiou_class", "iiou_category"}}
+        return {"metrics" : {"pq","pq_cat"}}
+
+class sorting_wilddash2_semantics(sorting_wilddash_prototype):
+    expect_suffix = "4"
+    def base_url(self):
+        return "https://wilddash.cc/api/scores.json/?challenges=semantic_rob_2020&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
+    def name(self):
+        return "wilddash2_sem"
+    def formats(self):
+        return {"metrics" : {"iou_class2", "iou_category2", "iiou_class2", "iiou_category2"}}
+    def format_subset(self):
+        return {"metrics" : {"iou_category2","iou_class2", "iou_category2", "iiou_class2", "iiou_category2"}}
 
 class sorting_objects365_obj(sorting_source_cl):
     def base_url(self):
@@ -645,10 +657,10 @@ def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
     all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
-    all_objdet_sources = [sorting_objects365_obj(),sorting_oid_obj(), sorting_coco_obj()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics(), sorting_coco_semantics()]
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance()]
-    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic()] #sorting_kitti_panoptic(), sorting_wilddash_panoptic()
+    all_objdet_sources = [sorting_objects365_obj(),sorting_oid_obj(), sorting_coco_objdet()]
+    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash2_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics(), sorting_coco_semantics()]
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance()]
+    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic()] #sorting_kitti_panoptic()
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 
                    ("semantic", all_semantic_sources), ("instance", all_instance_sources), ("panoptic", all_panoptic_sources)]

@@ -16,9 +16,9 @@ if __name__ == "__main__":
     name_joined_rank = "joined_"+dc.rank_prefix
     #all_sources = dc.get_all_sources_rvc2020()
     #all_sources = [("flow", [dc.sorting_sintel_flow(), dc.sorting_hd1k_flow()])]
-    all_sources = [("panoptic", [dc.sorting_coco_panoptic()])]
+    all_sources = [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
     #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
-    #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_wilddash_semantics()])]
+    #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_wilddash2_semantics()])]
     white_list = None
     
     if len(sys.argv) > 1:
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         except  Exception as e:
             rclogger.error("Skipping calculations for subset "+name+"; Exception: "+str(e))
             continue 
-        
+    
 
     
     for r in result_files:
