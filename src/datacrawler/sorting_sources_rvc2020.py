@@ -74,7 +74,57 @@ class sorting_middlb_mvs(sorting_source_cl):
             val_name = version+"_"+v[2] + "_"+ v[3]
             get_vals[v[1]][val_name.replace(" ","")] = float(v[4])
         return get_vals
-        
+
+class sorting_source_mvd(sorting_source_cl):
+    def get_rows(self, soup):
+        return None  # no standard <tr><td> schema but uses csv
+    def needs_sortings(self, version): #works for obj and inst
+        return [(version + "_" + metr, True) for metr in ["AP","AP_50","AP_75"]]
+    def get_values(self, soup, version, line=-1):
+        rows = soup.contents[0].split('\n')
+        get_vals = {}
+        sortings = self.needs_sortings(version)
+        for idx, r in enumerate(rows):
+            if idx == 0 or len(r) < 5:
+                continue
+            if max(r.find('animal--bird'), r.find('PQ_Bird')) >= 0: #reached detail view
+                break
+            v = r.split(',')
+            if len(v) < len(sortings)+2:
+                raise ("Error: invalid row for "+ self.name() +": " + r)
+            get_vals.setdefault(v[1], {})["method"] = v[1]
+            for idx0, (val_name,_) in enumerate(sortings):
+                get_vals[v[1]][val_name.replace(" ", "")] = float(v[2+idx0])
+        return get_vals
+
+class sorting_mvd_obj(sorting_source_mvd):
+    def base_url(self):
+        return "https://codalab.mapillary.com/competitions/41/results/65/data"
+    def name(self):
+        return "mvd_obj"
+
+class sorting_mvd_semantics(sorting_source_mvd):
+    def base_url(self):
+        return "https://codalab.mapillary.com/competitions/41/results/69/data"
+    def name(self):
+        return "mvd_sem"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr, True) for metr in ["IoU"]]
+
+class sorting_mvd_instance(sorting_source_mvd):
+    def base_url(self):
+        return "https://codalab.mapillary.com/competitions/41/results/63/data"
+    def name(self):
+        return "mvd_inst"
+
+class sorting_mvd_panoptic(sorting_source_mvd):
+    def base_url(self):
+        return "https://codalab.mapillary.com/competitions/41/results/63/data"
+    def name(self):
+        return "mvd_pano"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr, True) for metr in ["PQ","SQ","RQ","PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"]]
+
 class sorting_hd1k_flow(sorting_source_cl):
     def base_url(self):
         return "http://hci-benchmark.org/api/scores.json/?challenges=rob_flow&limit=1000000&metrics={metrics}"
@@ -264,7 +314,6 @@ class sorting_kitti2012_flow(sorting_source_cl):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("out-noc", 4, "percentage", True, 1), self.TDEntry("out-all", 5, "percentage", True, 1), 
                 self.TDEntry("avg-noc", 6, "float", True, 1), self.TDEntry("avg-all", 7, "float", True, 1), self.TDEntry("density", 8, "percentage", True), self.TDEntry("runtime", 9, "time", False)]
 
-
 class sorting_kitti_depth(sorting_source_cl):
     def base_url(self):
         return "http://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_prediction"
@@ -273,7 +322,7 @@ class sorting_kitti_depth(sorting_source_cl):
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
     def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("sl-log", 4, "float", False,1), self.TDEntry("sq-error-rel", 5, "float", False, 1), 
+        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("si-log", 4, "float", False,1), self.TDEntry("sq-error-rel", 5, "float", False, 1),
                 self.TDEntry("abs-error-rel", 6, "float", False, 1), self.TDEntry("irmse", 7, "float", False, 1), self.TDEntry("runtime", 8, "time", False)]
 
 class sorting_kitti_semantics(sorting_source_cl):
@@ -493,6 +542,20 @@ class sorting_ade20k_semantics(sorting_source_cl):
                 self.TDEntry("acc", 2, "float", False, -1), self.TDEntry("iou", 3, "float", False, -1), 
                 self.TDEntry("score", 4, "float", False,-1), self.TDEntry("submtime", 5, "time", False)]
 
+class sorting_viper_depth(sorting_source_cl):
+    def base_url(self):
+        return "https://playing-for-benchmarks.org/leaderboards/monodepth/"
+    def name(self):
+        return "viper_d"
+    def get_rows(self, soup):
+        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"),
+                self.TDEntry("si-log", 2, "float", False, 1),
+                self.TDEntry("abs-error-rel", 3, "float", False, 1),
+                self.TDEntry("irmse", 4, "float", False, 1),
+                self.TDEntry("runtime", 5, "time", False)]
+
 class sorting_viper_semantics(sorting_source_cl):
     def base_url(self):
         return "https://playing-for-benchmarks.org/leaderboards/seg_cls_img/"
@@ -526,6 +589,55 @@ class sorting_viper_instance(sorting_source_cl):
                 self.TDEntry("ap-snow", 6, "float", False, -1),
                 self.TDEntry("ap-night", 7, "float", False, -1),
                 self.TDEntry("runtime", 8, "time", False)]
+
+class sorting_viper_flow(sorting_source_cl):
+    def base_url(self):
+        return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
+    def name(self):
+        return "viper_flow"
+    def get_rows(self, soup):
+        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"),
+                self.TDEntry("wauc-all", 2, "float", False, -1),
+                self.TDEntry("wauc-day", 3, "float", False, -1),
+                self.TDEntry("wauc-sunset", 4, "float", False, -1),
+                self.TDEntry("wauc-rain", 5, "float", False, -1),
+                self.TDEntry("wauc-snow", 6, "float", False, -1),
+                self.TDEntry("wauc-night", 7, "float", False, -1),
+                self.TDEntry("runtime", 8, "time", False)]
+
+class sorting_viper_panoptic(sorting_source_cl):
+    def base_url(self):
+        return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
+    def name(self):
+        return "viper_flow"
+    def get_rows(self, soup):
+        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [] #TODO: no entry yet in leaderboard
+
+class sorting_rabbitai_depth(sorting_source_cl):
+    def base_url(self):
+        return "https://rabbitai.de/benchmark"
+    def name(self):
+        return "rabbitai_d"
+    def get_rows(self, soup):
+        return soup.find_all("table")[0].find_all("tr")
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 0, "string"),
+                self.TDEntry("avg30", 1, "float", False, 1),
+                self.TDEntry("miss30", 2, "float", False, 1),
+                self.TDEntry("fake30", 3, "float", False, 1),
+                self.TDEntry("miss-st30", 4, "float", False, 1),
+                self.TDEntry("fake-st30", 5, "float", False, 1),
+                self.TDEntry("bump30", 6, "float", False, 1),
+                self.TDEntry("avg-scale-err", 7, "float", False, 1),
+                self.TDEntry("avg-offset", 8, "float", False, 1),
+                self.TDEntry("si-log", 9, "percentage", False, 1),
+                self.TDEntry("sq-rel", 10, "percentage", False, 1),
+                self.TDEntry("abs-rel", 11, "percentage", False, 1),
+                self.TDEntry("inv-rmse", 12, "float", False, 1)]
 
 class sorting_coco_objdet(sorting_source_json):
     def base_url(self):
@@ -654,13 +766,13 @@ class sorting_oid_obj(sorting_kaggle_template):
         return "oid_obj"         
 
 def get_all_sources_rvc2020():
-    all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(), sorting_kitti2012_stereo(), sorting_kitti2015_stereo()]
-    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_kitti2012_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
-    all_depth_sources = [sorting_kitti_depth()]#, sorting_scannet_depth()]
-    all_objdet_sources = [sorting_objects365_obj(),sorting_oid_obj(), sorting_coco_objdet()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash2_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics(), sorting_coco_semantics()]
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance()]
-    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic()] #sorting_kitti_panoptic()
+    all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
+    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
+    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth()]#, sorting_scannet_depth()]
+    all_objdet_sources = [sorting_oid_obj(), sorting_coco_objdet(), sorting_mvd_obj()]
+    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash2_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics(), sorting_coco_semantics(), sorting_mvd_semantics()]
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance()]
+    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic()] #sorting_kitti_panoptic()
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 
                    ("semantic", all_semantic_sources), ("instance", all_instance_sources), ("panoptic", all_panoptic_sources)]

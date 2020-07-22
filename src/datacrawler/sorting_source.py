@@ -143,7 +143,10 @@ class sorting_source_cl:
                 if tde.pos < len(entries):
                     val = entries[tde.pos].string
                     if val is None:
-                        val = remove_tag(str(entries[tde.pos]), "td")
+                        if str(entries[tde.pos]).find("data-toggle") > 0:
+                            val = remove_tag(str(entries[tde.pos]), "a")
+                        else:
+                            val = remove_tag(str(entries[tde.pos]), "td")
                         val_br = val.split('<br/>')
                         if len(val_br) == 1 and val.find(' <span') > 0:
                             val_br = val.split(' <span') #fix needed for scannet/eth3d
