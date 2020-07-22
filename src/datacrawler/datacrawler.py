@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # coding=utf-8
 from bs4 import BeautifulSoup
-import requests, os, codecs, logging, json
+import requests, os, codecs, logging, json, time
 from . import csv_tools as ct
 
 if 'KAGGLE_CONFIG_DIR' in os.environ:
@@ -37,26 +37,32 @@ def setup_logging(log_file):
     return rclogger
 
 
-def save_html_dataset(url, trg_path):
+def save_html_dataset(url, trg_path, max_num_retries = 7):
     global kaggle_api_obj
     rclogger = setup_logging(None)
     call_kapi = url.startswith("kaggle://")
-    try:
-        rclogger.info("Requesting online resource url " + url)
-        if call_kapi:
-            if kaggle_api_obj is None:
-                kaggle_api_obj = KaggleApi(ApiClient())
-                kaggle_api_obj.authenticate()
-            resp_both = kaggle_api_obj.competition_view_leaderboard_with_http_info(id=url[len("kaggle://"):])
-            resp = ct.clean_dict_utf8(resp_both[0])
-            resp.update({'html_response':resp_both[1]})
-            with open(trg_path,'w') as json_outp:
-                json.dump(resp, json_outp, ensure_ascii=False, indent=4)
-            return True
-        html_doc = requests.get(url, verify=False, timeout=10.0).text
-    except Exception as e:
-        rclogger.error("Failed to open url " + url + " Exception: " + str(e))
-        return False
+    for retry0 in range(max_num_retries):
+        try:
+            rclogger.info("Requesting online resource url " + url)
+            if call_kapi:
+                if kaggle_api_obj is None:
+                    kaggle_api_obj = KaggleApi(ApiClient())
+                    kaggle_api_obj.authenticate()
+                resp_both = kaggle_api_obj.competition_view_leaderboard_with_http_info(id=url[len("kaggle://"):])
+                resp = ct.clean_dict_utf8(resp_both[0])
+                resp.update({'html_response':resp_both[1]})
+                with open(trg_path,'w') as json_outp:
+                    json.dump(resp, json_outp, ensure_ascii=False, indent=4)
+                return True
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning) #hide ubiquitous SSl Warnings 
+            html_doc = requests.get(url, verify=False, timeout=25.0).text
+            break
+        except Exception as e:
+            if retry0 < max_num_retries-1:
+                time.sleep(1.01) #prevent spamming of webservers
+                continue
+            rclogger.error("Failed to open url " + url + " Exception: " + str(e))
+            return False
     try:
         with codecs.open(trg_path, 'w', encoding='utf8') as outfile:
             outfile.write(html_doc)
