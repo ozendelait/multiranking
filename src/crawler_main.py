@@ -67,11 +67,11 @@ if __name__ == "__main__":
             all_keys, all_rankings = dc.get_all_rankings(all_vals)
             header_list = [dc.column_id] + sorted(list(all_rankings))
             header_list += sorted(list(set(all_keys) - set(header_list)))
-            dc.save_as_csv(header_list, all_vals.keys(), all_vals, tmp_dir + "/all_%s.csv" % name, order_name="idx")
+            dc.save_as_csv(header_list, all_vals.keys(), all_vals, tmp_dir + "/all_%s.csv" % name, order_name="idx", column_id=dc.column_id)
             filtered_vals = dc.remove_incomplete(all_vals, all_rankings, white_list)
             
             #gather only the intersection between all datasets
-            dc.save_as_csv(header_list, filtered_vals.keys(), filtered_vals, tmp_dir + "/filtered_%s.csv" % name, order_name="idx")
+            dc.save_as_csv(header_list, filtered_vals.keys(), filtered_vals, tmp_dir + "/filtered_%s.csv" % name, order_name="idx", column_id=dc.column_id)
             if len(filtered_vals.keys()) <= 0 :
                 rclogger.warning("Datasets of subset "+name+ " do not share common methods; skipping rank joining..")
                 continue
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 #add new subset ranking to filtered_vals
                 filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, sub_join_name, subjoined_ranking)
                 display_vals = dc.normalize_rankings(filtered_vals, src_rankings, add_old_rank = True)
-                dc.save_as_csv(header_list_subset, subjoined_ranking, display_vals, sub_join_file, order_name=sub_join_name)
+                dc.save_as_csv(header_list_subset, subjoined_ranking, display_vals, sub_join_file, order_name=sub_join_name, column_id=dc.column_id)
                 
                 subset_ranking_names.append(sub_join_name)
                 subset_result_files.append(sub_join_file)
@@ -121,11 +121,11 @@ if __name__ == "__main__":
             filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, name_joined_rank, joined_ranking)
             overall_res_file = tmp_dir + "/ranked_full_%s.csv" % name
             all_val = [r.replace(dc.rank_prefix+"_","") for r in all_rankings]
-            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names+all_rankings+all_val, joined_ranking, filtered_vals, overall_res_file)
+            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names+all_rankings+all_val, joined_ranking, filtered_vals, overall_res_file, column_id=dc.column_id)
 
             #this file is a condensed version having the overall joined ranks and the individual joined ranks per dataset
             condensed_res_file = tmp_dir + "/ranked_condensed_%s.csv" % name
-            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names, joined_ranking, filtered_vals, condensed_res_file)
+            dc.save_as_csv([name_joined_rank, dc.column_id]+subset_ranking_names, joined_ranking, filtered_vals, condensed_res_file, column_id=dc.column_id)
             
             
             #each subset creates these result files: one condensed joined rank of all participating datasets and one detained joined rank csv per dataset (for this challenge)   
