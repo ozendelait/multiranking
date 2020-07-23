@@ -123,7 +123,7 @@ def get_csv_datasets(src, url_id, html_path, csv_path, only_subset=True):
         
         subset_all = all_vals.keys()
         header_list = ct.get_headers_from_keys(src, column_id, ct.get_all_keys(all_vals), url_id, only_subset)
-        ct.save_as_csv(header_list, subset_all, all_vals, csv_path)
+        ct.save_as_csv(header_list, subset_all, all_vals, csv_path, column_id=column_id)
     else:
         rclogger.error("Could not extract any data from file " + html_path)
 
@@ -270,8 +270,13 @@ def normalize_rankings(all_vals, all_rankings, add_old_rank=False):
             
 def add_new_ranking(all_vals, column_id, ranking_name, ranking):
     curr_rank = 1
+    col_id_to_key = {vals[column_id]:key0 for key0, vals in all_vals.items() if column_id in vals} #support fuzzy mixed case comparisions
     for same_rank in ranking:
+        if isinstance(same_rank,str):
+            same_rank = [same_rank]
         for r in same_rank:
+            if not r in all_vals and r in col_id_to_key:
+                r = col_id_to_key[r]
             if not r in all_vals:
                 all_vals[r] = {column_id:r}
             all_vals[r][ranking_name] = curr_rank

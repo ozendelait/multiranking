@@ -120,9 +120,11 @@ def get_headers_from_keys(src, column_id="method", keys=[], version = None, use_
             headers.append(k)
     return headers + src_list
 
-def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None):
+def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None, column_id="method"):
     seperator = ';'
     repl_seperator = '%3B'
+
+    col_id_to_key = {vals[column_id]: key0 for key0, vals in all_vals.items() if column_id in vals}  # support fuzzy mixed case comparisions
 
     if not order_name is None and not order_name in header_list:
         header_list = [order_name] + header_list
@@ -138,6 +140,8 @@ def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None
             if not isinstance(methods, list):
                 methods = [methods]
             for method in methods:
+                if not method in all_vals and method in col_id_to_key:
+                    method = col_id_to_key[method]
                 if not method in all_vals:
                     continue
                 for entry in header_list:
