@@ -206,8 +206,9 @@ def get_all_rankings(all_vals, required_name=None):
     return all_keys, all_rankings
 
 
-def remove_incomplete(all_vals, check_list, whitelist):
+def remove_incomplete(all_vals, check_list, whitelist, return_incompletes=False):
     filtered_vals = {}
+    incomplete_vals = {}
     for method, vals in all_vals.items():
         if not whitelist is None and not method in whitelist:
             continue
@@ -218,8 +219,12 @@ def remove_incomplete(all_vals, check_list, whitelist):
                 break
         if all_entries_found:
             filtered_vals[method] = vals
-
-    return filtered_vals
+        else:
+            incomplete_vals[method] = vals
+    if return_incompletes:
+        return filtered_vals, incomplete_vals
+    else:
+        return filtered_vals
 
 
 def mixed_ranking_vals_headers(all_vals, all_rankings, rank_first=True):
