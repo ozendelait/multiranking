@@ -21,7 +21,8 @@ if __name__ == "__main__":
     #all_sources = [("objdet", [dc.sorting_oid_obj(), dc.sorting_coco_objdet()])]
     #all_sources = [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth()])]
     #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
-    #all_sources = [("semantic", [dc.sorting_cityscapes_semantics(), dc.sorting_kitti_semantics(), dc.sorting_wilddash2_semantics()])]
+    #all_sources = [("semantic", [dc.sorting_mvd_semantics()])]
+    #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="semantic"]
     white_list = None
     
     if len(sys.argv) > 1:
@@ -77,7 +78,7 @@ if __name__ == "__main__":
             for s in sources:
                 if s.format_subset() is None:  # this source is only archived for historical data reasons and is not used for acquiring rankings
                     continue
-                check_prefix = dc.rank_prefix + '_' + s.name() + '-'
+                check_prefix = dc.rank_prefix + '_' + s.name()
                 sub_join_name = name_joined_rank + "_" + s.name()
                 subset_ranking_names.append(sub_join_name)
                 for m, vals in incomplete_vals.items():
@@ -119,6 +120,7 @@ if __name__ == "__main__":
                 rclogger.warning("Datasets of subset "+name+ " do not share any common methods; skipping rank joining..")
                 all_sources_calculated = False
                 if len(all_incompletes) == 0:
+                    rclogger.warning("No incomplete submissions for subset " + name + "; skipping output...")
                     continue #do not generate empty file
 
             joined_ranking = []
@@ -142,12 +144,13 @@ if __name__ == "__main__":
             # sort incomplete methods by the number of completed submissions (i.e. show most promising at top)
             if len(all_incompletes) > 0:
                 incomplete_sorted_methods = sorted(all_incompletes.items(), key=lambda kv: len(kv[1]), reverse=True)
+                rclogger.info("Adding %i incomplete submissions to output for subset "%len(all_incompletes) + name + ".")
                 incomplete_sorted = []
                 sorted_methods_same = [incomplete_sorted_methods[0][0]]
                 sorted_methods_same_len = len(incomplete_sorted_methods[0][1])
                 for k in incomplete_sorted_methods[1:][:]+[['last_elem',[]]]:
                     if len(k[1]) < sorted_methods_same_len:
-                        if white_list is None and sorted_methods_same_len < 3: #this prevents too many entries during test sessions (i.e. show simply all submissions); "method" is always part of the list -> 3 means limit to 2 datasets
+                        if white_list is None and sorted_methods_same_len < 1:#3: #this prevents too many entries during test sessions (i.e. show simply all submissions); "method" is always part of the list -> 3 means limit to 2 datasets
                             break
                         for m in sorted_methods_same:
                             all_incompletes[m][name_joined_rank]=fake_incomplete_rank

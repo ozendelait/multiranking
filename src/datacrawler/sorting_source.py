@@ -214,9 +214,17 @@ class sorting_source_cl:
         
         param_name = rank_prefix+"_"+find_name    
         rankings[find_name] = []
+        cnt_ranking_exists = 0
         for key,v in all_vals.items():
             if find_name in v:
                 rankings[find_name].append((key,v[find_name]))
+                if param_name in v:
+                    cnt_ranking_exists += 1
+
+        if cnt_ranking_exists > 0 and cnt_ranking_exists < len(rankings[find_name]):
+            raise Exception("Partial original sorting found: %i instead of %i"%(cnt_ranking_exists, len(rankings[find_name])) + find_name + " found.")
+        if cnt_ranking_exists > 0:
+            return all_vals #nothing to do here, stick to submitted values
 
         o_sort = sorted(rankings[find_name], key=lambda x: x[1], reverse = reverse_sorting)
         

@@ -1,5 +1,6 @@
 #Hint: escape forward slashes (char '/') using %2F; otherwise the automatic naming for html/csv files will fail
 from .sorting_source import sorting_source_cl, sorting_source_json
+import sys
 import json
 from string import digits as strdg
 from . import csv_tools as ct
@@ -75,55 +76,62 @@ class sorting_middlb_mvs(sorting_source_cl):
             get_vals[v[1]][val_name.replace(" ","")] = float(v[4])
         return get_vals
 
-class sorting_source_mvd(sorting_source_cl):
+class sorting_source_codacsv(sorting_source_cl):
     def get_rows(self, soup):
         return None  # no standard <tr><td> schema but uses csv
     def needs_sortings(self, version): #works for obj and inst
-        return [(version + "_" + metr, True) for metr in ["AP","AP_50","AP_75"]]
+        return [(version + "_" + metr, True) for metr in ["ap","ap-50","ap-75"]]
     def get_values(self, soup, version, line=-1):
-        rows = soup.contents[0].split('\n')
+        rows = soup.contents[0]
+        if not isinstance(rows,str) or (sys.version[0] == 2 and not isinstance(rows, basestring)):
+            return {}
+        rows = rows.split('\n')
         get_vals = {}
         sortings = self.needs_sortings(version)
         for idx, r in enumerate(rows):
             if idx == 0 or len(r) < 5:
                 continue
-            if max(r.find('animal--bird'), r.find('PQ_Bird')) >= 0: #reached detail view
+            if max(r.find('animal--bird'), r.find('PQ_Bird'), r.find('No data available')) >= 0: #reached detail view
                 break
             v = r.split(',')
             if len(v) < len(sortings)+2:
                 raise ("Error: invalid row for "+ self.name() +": " + r)
             get_vals.setdefault(v[1], {})["method"] = v[1]
             for idx0, (val_name,_) in enumerate(sortings):
-                get_vals[v[1]][val_name.replace(" ", "")] = float(v[2+idx0])
+                val_corr = v[2+idx0].split('(')
+                get_vals[v[1]][val_name] = float(val_corr[0])
+                if len(val_corr) > 1:
+                    get_vals[v[1]][self.rank_prefix+"_"+val_name] = int(val_corr[1].split(')')[0])
+
         return get_vals
 
-class sorting_mvd_obj(sorting_source_mvd):
+class sorting_mvd_obj(sorting_source_codacsv):
     def base_url(self):
         return "https://codalab.mapillary.com/competitions/41/results/65/data"
     def name(self):
         return "mvd_obj"
 
-class sorting_mvd_semantics(sorting_source_mvd):
+class sorting_mvd_semantics(sorting_source_codacsv):
     def base_url(self):
-        return "https://codalab.mapillary.com/competitions/41/results/69/data"
+        return "https://codalab.mapillary.com/competitions/43/results/68/data"
     def name(self):
         return "mvd_sem"
     def needs_sortings(self, version):
-        return [(version + "_" + metr, True) for metr in ["IoU"]]
+        return [(version + "_" + metr, True) for metr in ["iou"]]
 
-class sorting_mvd_instance(sorting_source_mvd):
+class sorting_mvd_instance(sorting_source_codacsv):
     def base_url(self):
-        return "https://codalab.mapillary.com/competitions/41/results/63/data"
+        return "https://codalab.mapillary.com/competitions/40/results/63/data"
     def name(self):
         return "mvd_inst"
 
-class sorting_mvd_panoptic(sorting_source_mvd):
+class sorting_mvd_panoptic(sorting_source_codacsv):
     def base_url(self):
-        return "https://codalab.mapillary.com/competitions/41/results/63/data"
+        return "https://codalab.mapillary.com/competitions/42/results/67/data"
     def name(self):
         return "mvd_pano"
     def needs_sortings(self, version):
-        return [(version + "_" + metr, True) for metr in ["PQ","SQ","RQ","PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"]]
+        return [(version + "_" + metr.lower().replace("_","-"), True) for metr in ["PQ","SQ","RQ","PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"]]
 
 class sorting_hd1k_flow(sorting_source_cl):
     def base_url(self):
@@ -639,17 +647,12 @@ class sorting_rabbitai_depth(sorting_source_cl):
                 self.TDEntry("abs-rel", 11, "percentage", False, 1),
                 self.TDEntry("inv-rmse", 12, "float", False, 1)]
 
-class sorting_coco_objdet(sorting_source_json):
+class sorting_coco_objdet(sorting_source_codacsv):
     def base_url(self):
-        return "http://cocodataset.org/leaderboard/bbox_{track}.json"
+        return "https://competitions.codalab.org/competitions/25334/results/41626/data"
     def name(self):
         return "coco_obj"
-    def formats(self):
-        #TODO: check significance of "segm_dev2015", "segm_standard2015", "segm_challenge2016", "segm_challenge2017", "segm_challenge2018"
-        return {"track" : {"dev2015", "standard2015", "challenge2016", "challenge2017"}}
-    def format_subset(self):
-        return {"track" : {"challenge2017"}}
-    def get_relevant_td(self, version="", line=-1):
+    def get_relevant_td(self, version=""):
         return [self.TDEntry(self.column_id, ["team","name"], "string"), 
                 self.TDEntry("ap-all", ["results","AP"], "float", False, -1),
                 self.TDEntry("ap-50", ["results","AP_50"], "float", False, -1),
@@ -663,79 +666,32 @@ class sorting_coco_objdet(sorting_source_json):
                 self.TDEntry("ar-s", ["results","AR_small"], "float", False, -1),
                 self.TDEntry("ar-m", ["results","AR_medium"], "float", False, -1),
                 self.TDEntry("ar-l", ["results","AR_large"], "float", False, -1),
-                self.TDEntry("date", ["date"], "date-iso", False)
-                ]
-        
-class sorting_coco_semantics(sorting_source_json):
-    def base_url(self):
-        return "http://cocodataset.org/leaderboard/stuff_{track}.json"
-    def name(self):
-        return "coco_sem"
-    def formats(self):
-        return {"track" : {"dev2017", "challenge2017", "dev2018"}}
-    def format_subset(self):
-        return {"track" : {"dev2018"}}
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
-                self.TDEntry("miou", ["results","MIOU"], "float", False, -1),
-                self.TDEntry("fiou", ["results","FIOU"], "float", False, -1),
-                self.TDEntry("macc", ["results","MACC"], "float", False, -1),
-                self.TDEntry("pacc", ["results","PACC"], "float", False, -1),
-                self.TDEntry("miou-s", ["results","MIOUS"], "float", False, -1),
-                self.TDEntry("fiou-s", ["results","FIOUS"], "float", False, -1),
-                self.TDEntry("macc-s", ["results","MACCS"], "float", False, -1),
-                self.TDEntry("pacc-s", ["results","PACCS"], "float", False, -1),
                 self.TDEntry("date", ["date"], "date-iso", False)
                 ]
 
-class sorting_coco_instance(sorting_source_json):
+class sorting_coco_semantics(sorting_source_codacsv):
     def base_url(self):
-        return "http://cocodataset.org/leaderboard/segm_{track}.json"
+        return None
     def name(self):
-        return "coco_obj"
-    def formats(self):
-        return {"track" : {"dev2015", "standard2015", "challenge2016", "challenge2017", "challenge2018"}}
-    def format_subset(self):
-        return {"track" : {"challenge2018"}}
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
-                self.TDEntry("ap-all", ["results","AP"], "float", False, -1),
-                self.TDEntry("ap-50", ["results","AP_50"], "float", False, -1),
-                self.TDEntry("ap-75", ["results","AP_75"], "float", False, -1),
-                self.TDEntry("ap-s", ["results","AP_small"], "float", False, -1),
-                self.TDEntry("ap-m", ["results","AP_medium"], "float", False, -1),
-                self.TDEntry("ap-l", ["results","AP_large"], "float", False, -1),
-                self.TDEntry("ar-1", ["results","AR_max_1"], "float", False, -1),
-                self.TDEntry("ar-10", ["results","AR_max_10"], "float", False, -1),
-                self.TDEntry("ar-100", ["results","AR_max_100"], "float", False, -1),
-                self.TDEntry("ar-s", ["results","AR_small"], "float", False, -1),
-                self.TDEntry("ar-m", ["results","AR_medium"], "float", False, -1),
-                self.TDEntry("ar-l", ["results","AR_large"], "float", False, -1),
-                self.TDEntry("date", ["date"], "date-iso", False)
-                ]
-        
-class sorting_coco_panoptic(sorting_source_json):
+        return "coco_sem"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr.lower().replace(" ","-"), True) for metr in ["PQ", "SQ", "RQ", "PQ Things", "SQ Things", "RQ Things", "PQ Stuff", "SQ Stuff", "RQ Stuff"]]
+
+class sorting_coco_instance(sorting_source_codacsv):
     def base_url(self):
-        return "http://cocodataset.org/leaderboard/panoptic_{track}.json"
+        return "https://competitions.codalab.org/competitions/25388/results/41715/data"
     def name(self):
-        return "coco_obj"
-    def formats(self):
-        return {"track" : {"challenge2018","challenge2019", "dev"}}
-    def format_subset(self):
-        return {"track" : {"challenge2019"}}
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
-                self.TDEntry("pq", ["results","PQ"], "float", False, -1),
-                self.TDEntry("sq", ["results","SQ"], "float", False, -1),
-                self.TDEntry("rq", ["results","RQ"], "float", False, -1),
-                self.TDEntry("pq-th", ["results","PQTH"], "float", False, -1),
-                self.TDEntry("rq-th", ["results","RQTH"], "float", False, -1),
-                self.TDEntry("sq-th", ["results","SQTH"], "float", False, -1),
-                self.TDEntry("pq-st", ["results","PQST"], "float", False, -1),
-                self.TDEntry("sq-st", ["results","SQST"], "float", False, -1),
-                self.TDEntry("rq-st", ["results","RQST"], "float", False, -1),
-                self.TDEntry("date", ["date"], "date-iso", False)
-                ]
+        return "coco_inst"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr.lower().replace(" ","-").replace("=","-"), True) for metr in ["AP", "AP IoU=.50", "AP IoU=.75", "AP large", "AP medium", "AP small", "AR large", "AR max=1", "AR max=10", "AR max=100", "AR medium", "AR small"]]
+
+class sorting_coco_panoptic(sorting_source_codacsv):
+    def base_url(self):
+        return "https://competitions.codalab.org/competitions/25386/results/41712/data"
+    def name(self):
+        return "coco_pano"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr.lower().replace(" ","-"), True) for metr in ["PQ", "SQ", "RQ", "PQ Things", "SQ Things", "RQ Things", "PQ Stuff", "SQ Stuff", "RQ Stuff"]]
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
@@ -768,9 +724,9 @@ class sorting_oid_obj(sorting_kaggle_template):
 def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
-    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth()]#, sorting_scannet_depth()]
+    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth()]
     all_objdet_sources = [sorting_oid_obj(), sorting_coco_objdet(), sorting_mvd_obj()]
-    all_semantic_sources = [sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_wilddash2_semantics(), sorting_ade20k_semantics(), sorting_viper_semantics(), sorting_scannet_semantics(), sorting_coco_semantics(), sorting_mvd_semantics()]
+    all_semantic_sources = [sorting_ade20k_semantics(), sorting_coco_semantics(), sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
     all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance()]
     all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic()] #sorting_kitti_panoptic()
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
