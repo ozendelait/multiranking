@@ -90,7 +90,7 @@ class sorting_middlb_mvs(sorting_source_cl):
             v = r.split(',')
             if len(v) < 5:
                 raise("Error: invalid row in mview pageDump.php: " + r)
-            get_vals.setdefault(v[1], {})["method"] = v[1]
+            get_vals.setdefault(v[1], {})[self.column_id] = v[1]
             val_name = version+"_"+v[2] + "_"+ v[3]
             get_vals[v[1]][val_name.replace(" ","")] = float(v[4])
         return get_vals
@@ -107,20 +107,27 @@ class sorting_source_codacsv(sorting_source_cl):
         rows = rows.split('\n')
         get_vals = {}
         sortings = self.needs_sortings(version)
+        column_idx = 1  # this is often the user instead of the method / team name...
         for idx, r in enumerate(rows):
-            if idx == 0 or len(r) < 5:
+            if idx == 0:
+                for col_check in ["Method", "Team Name"]:
+                    if col_check in r:
+                        column_idx = [idx for idx, v in enumerate(r.split(',')) if col_check in v]
+                        break
+                continue
+            if len(r) < 5:
                 continue
             if max(r.find('animal--bird'), r.find('PQ_Bird'), r.find('No data available')) >= 0: #reached detail view
                 break
             v = r.split(',')
             if len(v) < len(sortings)+2:
-                raise ("Error: invalid row for "+ self.name() +": " + r)
-            get_vals.setdefault(v[1], {})["method"] = v[1]
+                raise "Error: invalid row for "+ self.name() +": " + r
+            get_vals.setdefault(v[column_idx], {})[self.column_id] = v[column_idx]
             for idx0, (val_name,_) in enumerate(sortings):
-                val_corr = v[2+idx0].split('(')
-                get_vals[v[1]][val_name] = float(val_corr[0])
+                val_corr = v[column_idx+1+idx0].split('(')
+                get_vals[v[column_idx]][val_name] = float(val_corr[0])
                 if len(val_corr) > 1:
-                    get_vals[v[1]][self.rank_prefix+"_"+val_name] = int(val_corr[1].split(')')[0])
+                    get_vals[v[column_idx]][self.rank_prefix+"_"+val_name] = int(val_corr[1].split(')')[0])
 
         return get_vals
 
@@ -671,22 +678,8 @@ class sorting_coco_objdet(sorting_source_codacsv):
         return "https://competitions.codalab.org/competitions/25334/results/41626/data"
     def name(self):
         return "coco_obj"
-    def get_relevant_td(self, version=""):
-        return [self.TDEntry(self.column_id, ["team","name"], "string"), 
-                self.TDEntry("ap-all", ["results","AP"], "float", False, -1),
-                self.TDEntry("ap-50", ["results","AP_50"], "float", False, -1),
-                self.TDEntry("ap-75", ["results","AP_75"], "float", False, -1),
-                self.TDEntry("ap-s", ["results","AP_small"], "float", False, -1),
-                self.TDEntry("ap-m", ["results","AP_medium"], "float", False, -1),
-                self.TDEntry("ap-l", ["results","AP_large"], "float", False, -1),
-                self.TDEntry("ar-1", ["results","AR_max_1"], "float", False, -1),
-                self.TDEntry("ar-10", ["results","AR_max_10"], "float", False, -1),
-                self.TDEntry("ar-100", ["results","AR_max_100"], "float", False, -1),
-                self.TDEntry("ar-s", ["results","AR_small"], "float", False, -1),
-                self.TDEntry("ar-m", ["results","AR_medium"], "float", False, -1),
-                self.TDEntry("ar-l", ["results","AR_large"], "float", False, -1),
-                self.TDEntry("date", ["date"], "date-iso", False)
-                ]
+    def needs_sortings(self, version):
+        return [(version + "_" + metr, True) for metr in ["ap","ap-50","ap-75","ap-l","ap-m","ap-s","ar-l","ar-m1","ar-max10","ar-max100","ar-m","ar-s"]]
 
 class sorting_coco_semantics(sorting_source_codacsv):
     def base_url(self):
@@ -720,7 +713,7 @@ class sorting_kaggle_template(sorting_source_cl):
     def get_rows(self, soup): # no standard <tr><td> schema but uses json
         return None
     def needs_sortings(self, version):
-        return [('score', False)]
+        return [('score', True)]
     def get_values(self, soup, version, line=-1):
         vals = json.loads(soup.text)
         get_vals = {}
