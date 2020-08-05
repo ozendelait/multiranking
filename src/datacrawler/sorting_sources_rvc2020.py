@@ -27,7 +27,7 @@ class sorting_sintel_depth(sorting_source_cl):
     def base_url(self):
         return "https://sintel-depth.csail.mit.edu/leaderboard"
     def name(self):
-        return "sintel_f"
+        return "sintel_d"
     def get_rows(self, soup):
         all_tr = soup.find_all("table")[0].find_all("tr")[1:]
         return all_tr
@@ -628,7 +628,7 @@ class sorting_viper_flow(sorting_source_cl):
     def base_url(self):
         return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
     def name(self):
-        return "viper_flow"
+        return "viper_f"
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-hover")[0].find_all("tr")
     def get_relevant_td(self, version="", line=-1):
@@ -645,7 +645,7 @@ class sorting_viper_panoptic(sorting_source_cl):
     def base_url(self):
         return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
     def name(self):
-        return "viper_flow"
+        return "viper_pano"
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-hover")[0].find_all("tr")
     def get_relevant_td(self, version="", line=-1):
