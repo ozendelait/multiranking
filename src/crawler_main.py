@@ -16,11 +16,10 @@ if __name__ == "__main__":
 
     name_joined_rank = "joined_"+dc.rank_prefix
     #all_sources = dc.get_all_sources_rvc2020()
-    #all_sources = [("flow", [dc.sorting_sintel_flow(), dc.sorting_hd1k_flow()])]
-    all_sources = [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
-    #all_sources = [("objdet", [dc.sorting_oid_obj(), dc.sorting_coco_objdet()])]
-    #all_sources = [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth()])]
-    #all_sources = [("stereo", [dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo(), dc.sorting_eth3d_stereo()])]
+    all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
+    all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
+    all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
+    all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
     #all_sources = [("semantic", [dc.sorting_mvd_semantics()])]
     #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="semantic"]
     white_list = None

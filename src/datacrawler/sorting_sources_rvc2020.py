@@ -16,11 +16,30 @@ class sorting_sintel_flow(sorting_source_cl):
         all_tr = soup.find_all("table")[0].find_all("tr")[1:]
         return all_tr
     def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("EPEall", 1, "float", True, 1), self.TDEntry("EPEmatched", 2, "float", True, 1), 
-                self.TDEntry("EPEunmatched", 3, "float", True, 1),  self.TDEntry("d0-10", 4, "float", True, 1),   self.TDEntry("d10-60", 5, "float", True, 1), 
-                self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1), self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)] 
-     
-    
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("EPEall", 1, "float", True, 1),
+                self.TDEntry("EPEmatched", 2, "float", True, 1),
+                self.TDEntry("EPEunmatched", 3, "float", True, 1), self.TDEntry("d0-10", 4, "float", True, 1),
+                self.TDEntry("d10-60", 5, "float", True, 1),
+                self.TDEntry("d60-140", 6, "float", True, 1), self.TDEntry("s0-10", 7, "float", True, 1),
+                self.TDEntry("s10-40", 8, "float", True, 1), self.TDEntry("s40p", 9, "float", True, 1)]
+
+class sorting_sintel_depth(sorting_source_cl):
+    def base_url(self):
+        return "https://sintel-depth.csail.mit.edu/leaderboard"
+    def name(self):
+        return "sintel_f"
+    def get_rows(self, soup):
+        all_tr = soup.find_all("table")[0].find_all("tr")[1:]
+        return all_tr
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("SILog_final", 1, "float", True, 1),
+                self.TDEntry("SqErrorRel_final", 2, "float", True, 1),
+                self.TDEntry("AbsErrorRel_final", 3, "float", True, 1),
+                self.TDEntry("iRMSE_final", 4, "float", True, 1), self.TDEntry("SILog_clean", 5, "float", True, 1),
+                self.TDEntry("SqErrorRel_clean", 6, "float", True, 1),
+                self.TDEntry("AbsErrorRel_clean", 7, "float", True, 1),
+                self.TDEntry("iRMSE_clean", 8, "float", True, 1)]
+
 class sorting_middlb_flow(sorting_source_cl):
     def base_url(self):
         return "http://vision.middlebury.edu/flow/eval/results/results-{error_t}{stat}.php"
@@ -105,7 +124,7 @@ class sorting_source_codacsv(sorting_source_cl):
 
         return get_vals
 
-class sorting_mvd_obj(sorting_source_codacsv):
+class sorting_mvd_objdet(sorting_source_codacsv):
     def base_url(self):
         return "https://codalab.mapillary.com/competitions/41/results/65/data"
     def name(self):
@@ -523,7 +542,7 @@ class sorting_wilddash2_semantics(sorting_wilddash_prototype):
     def format_subset(self):
         return {"metrics" : {"iou_category2","iou_class2", "iou_category2", "iiou_class2", "iiou_category2"}}
 
-class sorting_objects365_obj(sorting_source_cl):
+class sorting_objects365_objdet(sorting_source_cl):
     def base_url(self):
         return "https://www.objects365.org/{track}_track.html"
     def name(self):
@@ -715,7 +734,7 @@ class sorting_kaggle_template(sorting_source_cl):
                     get_vals[id0][key] = val
         return get_vals
         
-class sorting_oid_obj(sorting_kaggle_template):
+class sorting_oid_objdet(sorting_kaggle_template):
     def base_url(self):
         return "kaggle://open-images-2019-object-detection"
     def name(self):
@@ -723,12 +742,12 @@ class sorting_oid_obj(sorting_kaggle_template):
 
 def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
-    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_hd1k_flow() ]
-    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth()]
-    all_objdet_sources = [sorting_oid_obj(), sorting_coco_objdet(), sorting_mvd_obj()]
-    all_semantic_sources = [sorting_ade20k_semantics(), sorting_coco_semantics(), sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
+    all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_viper_flow() ]
+    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth(), sorting_sintel_depth()]
+    all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
+    all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
     all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance()]
-    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic()] #sorting_kitti_panoptic()
+    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic(), sorting_viper_panoptic()]
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 
                    ("semantic", all_semantic_sources), ("instance", all_instance_sources), ("panoptic", all_panoptic_sources)]
