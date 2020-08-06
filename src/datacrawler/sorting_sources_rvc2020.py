@@ -112,7 +112,7 @@ class sorting_source_codacsv(sorting_source_cl):
             if idx == 0:
                 for col_check in ["Method", "Team Name"]:
                     if col_check in r:
-                        column_idx = [idx for idx, v in enumerate(r.split(',')) if col_check in v]
+                        column_idx = [idx for idx, v in enumerate(r.split(',')) if col_check in v][0]
                         break
                 continue
             if len(r) < 5:
@@ -122,7 +122,7 @@ class sorting_source_codacsv(sorting_source_cl):
             v = r.split(',')
             if len(v) < len(sortings)+2:
                 raise "Error: invalid row for "+ self.name() +": " + r
-            get_vals.setdefault(v[column_idx], {})[self.column_id] = v[column_idx]
+            get_vals.setdefault(v[column_idx], {})[self.column_id] = v[column_idx-1] if column_idx > 0 and "_RVC" in v[column_idx-1] else v[column_idx] #hack to use team name instead of method if it matches the _RVC postfix
             for idx0, (val_name,_) in enumerate(sortings):
                 val_corr = v[column_idx+1+idx0].split('(')
                 get_vals[v[column_idx]][val_name] = float(val_corr[0])
@@ -643,7 +643,7 @@ class sorting_viper_flow(sorting_source_cl):
 
 class sorting_viper_panoptic(sorting_source_cl):
     def base_url(self):
-        return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
+        return "https://playing-for-benchmarks.org/leaderboards/seg_pano_img/"
     def name(self):
         return "viper_pano"
     def get_rows(self, soup):
@@ -713,7 +713,7 @@ class sorting_kaggle_template(sorting_source_cl):
     def get_rows(self, soup): # no standard <tr><td> schema but uses json
         return None
     def needs_sortings(self, version):
-        return [('score', True)]
+        return [(version+'_score', True)]
     def get_values(self, soup, version, line=-1):
         vals = json.loads(soup.text)
         get_vals = {}
@@ -724,7 +724,7 @@ class sorting_kaggle_template(sorting_source_cl):
             get_vals[id0] = {self.column_id:id0}
             for key, val in f.items():
                 if key in self.keep_keys:
-                    get_vals[id0][key] = val
+                    get_vals[id0][version+"_"+key] = val
         return get_vals
         
 class sorting_oid_objdet(sorting_kaggle_template):
@@ -733,13 +733,19 @@ class sorting_oid_objdet(sorting_kaggle_template):
     def name(self):
         return "oid_obj"         
 
+class sorting_oid_instance(sorting_kaggle_template):
+    def base_url(self):
+        return "kaggle://open-images-instance-segmentation-rvc-2020"
+    def name(self):
+        return "oid_inst"
+
 def get_all_sources_rvc2020():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_viper_flow() ]
     all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
     all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance()]
+    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance(), sorting_oid_instance()]
     all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic(), sorting_viper_panoptic()]
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 

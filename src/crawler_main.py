@@ -15,13 +15,13 @@ if __name__ == "__main__":
     fake_incomplete_rank = 4096 # rank used in csv for incomplete submissions
 
     name_joined_rank = "joined_"+dc.rank_prefix
-    #all_sources = dc.get_all_sources_rvc2020()
-    all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
-    all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
-    all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
-    all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
-    #all_sources = [("semantic", [dc.sorting_mvd_semantics()])]
-    #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="semantic"]
+    all_sources = dc.get_all_sources_rvc2020()
+    #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
+    #all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
+    #all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
+    #all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
+    #all_sources = [("i", [dc.sorting_mvd_semantics()])]
+   # all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
     white_list = None
     
     if len(sys.argv) > 1:
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 sorted_methods_same_len = len(incomplete_sorted_methods[0][1])
                 for k in incomplete_sorted_methods[1:][:]+[['last_elem',[]]]:
                     if len(k[1]) < sorted_methods_same_len:
-                        if white_list is None and sorted_methods_same_len < 1:#3: #this prevents too many entries during test sessions (i.e. show simply all submissions); "method" is always part of the list -> 3 means limit to 2 datasets
+                        if white_list is None and sorted_methods_same_len < 3: #this prevents too many entries during test sessions (i.e. show simply all submissions); "method" is always part of the list -> 3 means limit to 2 datasets
                             break
                         for m in sorted_methods_same:
                             all_incompletes[m][name_joined_rank]=fake_incomplete_rank
@@ -171,7 +171,7 @@ if __name__ == "__main__":
             
         except  Exception as e:
             rclogger.error("Skipping calculations for subset "+name+"; Exception: "+str(e))
-            continue 
+            continue
     
 
     
