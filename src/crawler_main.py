@@ -15,21 +15,27 @@ if __name__ == "__main__":
     fake_incomplete_rank = 4096 # rank used in csv for incomplete submissions
 
     name_joined_rank = "joined_"+dc.rank_prefix
-    #all_sources = dc.get_all_sources_rvc2020()
+    all_sources = dc.get_all_sources_rvc2020()
     #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
     #all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
     #all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
     #all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
     #all_sources = [("i", [dc.sorting_mvd_semantics()])]
-    all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
+    #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
     white_list = None
-    
+    renaming_methods = None
+
     if len(sys.argv) > 1:
         #read whitelist txt file
         with open(sys.argv[1]) as wlfile:
             wl_lines = wlfile.readlines()
         white_list = [dc.res_name_fuzzy_cmp(l.split(';')[1].strip(), allow_fuzzy_namecmp) for l in wl_lines]
-    
+    if len(sys.argv) > 2:
+        #read renaming list to correctly map ill-named submissions
+        with open(sys.argv[2]) as rnfile:
+            rn_lines = rnfile.readlines()
+        renaming_methods = {l.split(';')[0].strip():dc.res_name_fuzzy_cmp(l.split(';')[1].strip(), allow_fuzzy_namecmp)  for l in rn_lines }
+
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
     
