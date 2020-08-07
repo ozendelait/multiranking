@@ -15,13 +15,13 @@ if __name__ == "__main__":
     fake_incomplete_rank = 4096 # rank used in csv for incomplete submissions
 
     name_joined_rank = "joined_"+dc.rank_prefix
-    all_sources = dc.get_all_sources_rvc2020()
+    #all_sources = dc.get_all_sources_rvc2020()
     #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
     #all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
     #all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
     #all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
     #all_sources = [("i", [dc.sorting_mvd_semantics()])]
-   # all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
+    all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
     white_list = None
     
     if len(sys.argv) > 1:
@@ -102,14 +102,15 @@ if __name__ == "__main__":
                     src_filtered_vals = dc.remove_incomplete(filtered_vals, src_rankings, None)
                     header_list_subset = [dc.column_id] + dc.mixed_ranking_vals_headers(src_keys, sorted(src_rankings), rank_first=True) #interleave rank / val
                     subjoined_ranking = get_joined_ranking(list(src_filtered_vals.values()), dc.column_id, src_rankings, batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking={}, rclogger = rclogger)
+                    sub_join_name = name_joined_rank + "_" + src_name
+                    check_prefix = dc.rank_prefix + '_' + s.name()
 
                     if len(subjoined_ranking) <= 0:
                         rclogger.warning("Skipping calculations for subset "+name+", could not calculate joined ranking for dataset "+src_name)
                         all_sources_calculated = False
-                        break
+                        continue
 
                     sub_join_file = tmp_dir + "/subjoined_%s.csv" % src_name
-                    sub_join_name = name_joined_rank+"_"+src_name
                     #add new subset ranking to filtered_vals
                     filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, sub_join_name, subjoined_ranking)
                     display_vals = dc.normalize_rankings(filtered_vals, src_rankings, add_old_rank = True)
@@ -126,11 +127,22 @@ if __name__ == "__main__":
             if all_sources_calculated:
                 rclogger.info("Calculating joined ranking for subset "+name)
                 joined_ranking = get_joined_ranking(filtered_vals, dc.column_id, subset_ranking_names, batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = {}, rclogger = rclogger)
+            else:
+                for s in sources:
+                    if s.format_subset() is None: # this source is only archived for historical data reasons and is not used for acquiring rankings
+                        continue
+                    sub_join_name = name_joined_rank + "_" + s.name()
+                    check_prefix = dc.rank_prefix + '_' + s.name()
+                    for m, vals in filtered_vals.items():
+                        if any([k for k in vals.keys() if k.find(check_prefix) == 0]):
+                            all_incompletes.setdefault(m, {}).update({sub_join_name: fake_incomplete_rank})
+                            all_incompletes[m][dc.column_id] = vals.get(dc.column_id, m)
             # Balance the influence of each dataset (sum of wheights per dataset are the same)
             # wheights = dc.calc_weight_per_benchmark(all_rankings, sources)
             # joined_ranking = get_joined_ranking(list(filtered_vals.values()), dc.column_id, all_rankings,  batchsize = batchsize_calc, max_calc= max_sort_calc, weight_p_ranking = wheights, rclogger = rclogger)
                         
             if len(joined_ranking) > 0:
+                # add all submissions as incompletes if subset cannot be calculated due to a malfunctioning/hidden leaderboard
                 filtered_vals = dc.add_new_ranking(filtered_vals, dc.column_id, name_joined_rank, joined_ranking)
                 overall_res_file = tmp_dir + "/ranked_full_%s.csv" % name
                 all_val = [r.replace(dc.rank_prefix+"_","") for r in all_rankings]
