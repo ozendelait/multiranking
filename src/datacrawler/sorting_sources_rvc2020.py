@@ -729,7 +729,7 @@ class sorting_kaggle_template(sorting_source_cl):
         
 class sorting_oid_objdet(sorting_kaggle_template):
     def base_url(self):
-        return "kaggle://open-images-2019-object-detection"
+        return "kaggle://open-images-object-detection-rvc-2020"
     def name(self):
         return "oid_obj"         
 
