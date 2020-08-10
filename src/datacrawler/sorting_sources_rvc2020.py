@@ -157,7 +157,7 @@ class sorting_mvd_panoptic(sorting_source_codacsv):
     def name(self):
         return "mvd_pano"
     def needs_sortings(self, version):
-        return [(version + "_" + metr.lower().replace("_","-"), True) for metr in ["PQ","SQ","RQ","PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"]]
+        return [(version + "_" + metr.lower().replace("_","-"), True) for metr in ["PQ","SQ","RQ"]] # these are emtpy on the leaderboard: "PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"
 
 class sorting_hd1k_flow(sorting_source_cl):
     def base_url(self):
@@ -534,9 +534,9 @@ class sorting_wilddash2_panoptic(sorting_wilddash_prototype):
     def name(self):
         return "wilddash2_pano"
     def formats(self):
-        return {"metrics" : {"pq", "pq_cat"}}
+        return {"metrics" : {"pq", "category_pq"}}
     def format_subset(self):
-        return {"metrics" : {"pq","pq_cat"}}
+        return {"metrics" : {"pq","category_pq"}}
 
 class sorting_wilddash2_semantics(sorting_wilddash_prototype):
     expect_suffix = "4"
@@ -649,7 +649,11 @@ class sorting_viper_panoptic(sorting_source_cl):
     def get_rows(self, soup):
         return soup.find_all("table", class_="table-hover")[0].find_all("tr")
     def get_relevant_td(self, version="", line=-1):
-        return [] #TODO: no entry yet in leaderboard
+        return [self.TDEntry(self.column_id, 1, "string"),
+                self.TDEntry("pq-mean", 2, "float", False, -1),
+                self.TDEntry("sq-mean", 3, "float", False, -1),
+                self.TDEntry("rq-mean", 4, "float", False, -1),
+                self.TDEntry("runtime", 5, "time", False)]
 
 class sorting_rabbitai_depth(sorting_source_cl):
     def base_url(self):

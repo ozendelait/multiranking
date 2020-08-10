@@ -146,7 +146,7 @@ def fetch_datasets(all_sources, tmp_dir, only_subset=False):
     return sucess_subsets
 
 
-def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allow_fuzzy_namecmp=0):
+def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allow_fuzzy_namecmp=0, renaming_methods={}):
     rclogger = setup_logging(None)
     # The following steps are done in this sequence to later allow reconstruction of historical data; also some datasources might directly provide csv               
     if read_only <= 1:       
@@ -167,7 +167,7 @@ def get_joined_dataset(all_sources, tmp_dir, only_subset=True, read_only=0, allo
             csv_path = os.path.join(tmp_dir, url_id + csv_raw_postfix + ".csv")
             loaded_urls.append(csv_path)
     
-    return ct.join_csv_files(loaded_urls, column_id=column_id, rclogger=rclogger, allow_fuzzy_namecmp=allow_fuzzy_namecmp)
+    return ct.join_csv_files(loaded_urls, column_id=column_id, rclogger=rclogger, allow_fuzzy_namecmp=allow_fuzzy_namecmp, renaming_methods=renaming_methods)
 
 
 def calc_weight_per_benchmark(all_rankings, all_srcs, multiplier=100):

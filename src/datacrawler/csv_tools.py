@@ -1,4 +1,4 @@
-import datetime, logging, io
+import datetime, logging, io, os
 logging.basicConfig(level=logging.INFO)
 
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -174,15 +174,22 @@ def res_name_fuzzy_cmp(id0, allow_fuzzy_namecmp):
 def n_lower_chars(string):
     return sum(1 for c in str(string) if c.islower())
     
-def join_csv_files(csv_paths, column_id, rclogger = None, allow_fuzzy_namecmp = 0):
+def join_csv_files(csv_paths, column_id, rclogger = None, allow_fuzzy_namecmp = 0, renaming_methods={}):
     if rclogger is None:
         rclogger = logging.getLogger(__name__)
     
     all_vals = {}
     for csv_path in csv_paths:
         vals_csv = load_from_csv(csv_path, column_id= column_id, order_name=None, rclogger = rclogger)
+        source_name = os.path.basename(csv_path).replace('_raw','').split('.')[0].split('-')[0]
+        renamings = renaming_methods.get(source_name,{})
         for id0_orig, vals in vals_csv.items():
+            if id0_orig in renamings:
+                id0_orig = renamings[id0_orig]
             id0 = res_name_fuzzy_cmp(id0_orig,allow_fuzzy_namecmp)
+            if id0 in renamings:
+                id0 = renamings[id0]
+                id0_orig = id0
             vals[column_id] = id0_orig
             if id0 in all_vals:
                 for name, val in vals.items():

@@ -20,21 +20,22 @@ if __name__ == "__main__":
     #all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
     #all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
     #all_sources += [("objdet", [dc.sorting_oid_objdet(), dc.sorting_coco_objdet(), dc.sorting_mvd_objdet()])]
-    #all_sources = [("i", [dc.sorting_mvd_semantics()])]
-    #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="objdet"]
+    #all_sources = [("i", [dc.sorting_viper_panoptic()])]
+    #all_sources = [s for s in dc.get_all_sources_rvc2020() if s[0]=="panoptic"]
     white_list = None
-    renaming_methods = None
-
+    renaming_methods = {}
     if len(sys.argv) > 1:
         #read whitelist txt file
         with open(sys.argv[1]) as wlfile:
             wl_lines = wlfile.readlines()
         white_list = [dc.res_name_fuzzy_cmp(l.split(';')[1].strip(), allow_fuzzy_namecmp) for l in wl_lines]
     if len(sys.argv) > 2:
-        #read renaming list to correctly map ill-named submissions
+        #read renaming list to correctly map ill-named submissions; format: lines with source.name();old_name;new_name   
         with open(sys.argv[2]) as rnfile:
             rn_lines = rnfile.readlines()
-        renaming_methods = {l.split(';')[0].strip():dc.res_name_fuzzy_cmp(l.split(';')[1].strip(), allow_fuzzy_namecmp)  for l in rn_lines }
+        for l in rn_lines:
+            one_renaming = [lsep.strip() for lsep in l.split(';')]
+            renaming_methods.setdefault(one_renaming[0],{})[one_renaming[1]] = dc.res_name_fuzzy_cmp(one_renaming[2],allow_fuzzy_namecmp)
 
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")
@@ -68,7 +69,7 @@ if __name__ == "__main__":
             continue
         try:
             all_incompletes = {}  # dict of methods which have incomplete submissions (per method a list of already submitted benchmarks)
-            all_vals = dc.get_joined_dataset(sources, tmp_dir, only_subset=only_subset, read_only=read_only, allow_fuzzy_namecmp = allow_fuzzy_namecmp)
+            all_vals = dc.get_joined_dataset(sources, tmp_dir, only_subset=only_subset, read_only=read_only, allow_fuzzy_namecmp = allow_fuzzy_namecmp, renaming_methods=renaming_methods)
             if len(all_vals) <= 0:
                 continue # skip this subset, it has no data (on purpose; otherwise get_joined_dataset would throw an exception)
             #one large csv containing all the data
