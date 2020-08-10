@@ -35,7 +35,10 @@ if __name__ == "__main__":
             rn_lines = rnfile.readlines()
         for l in rn_lines:
             one_renaming = [lsep.strip() for lsep in l.split(';')]
-            renaming_methods.setdefault(one_renaming[0],{})[one_renaming[1]] = dc.res_name_fuzzy_cmp(one_renaming[2],allow_fuzzy_namecmp)
+            #skip invalid/commented lines
+            if len(one_renaming) != 3 or len(one_renaming[0]) == 0 or one_renaming[0][0] == "#":
+                continue
+            renaming_methods.setdefault(one_renaming[0],{})[one_renaming[1]] = one_renaming[2]
 
     res_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../results")
     tmp_dir_root = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../data")

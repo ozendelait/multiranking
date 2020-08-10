@@ -1,13 +1,45 @@
 #!/usr/bin/python
 # coding=utf-8
 from bs4 import BeautifulSoup
-import requests, os, codecs, logging, json, time
+import requests, os, codecs, logging, json, time, datetime
 from . import csv_tools as ct
 
 if 'KAGGLE_CONFIG_DIR' in os.environ:
     # make sure to set the environment variable KAGGLE_CONFIG_DIR correctly and place kaggle.json there
     from kaggle.api.kaggle_api_extended import KaggleApi
     from kaggle.api_client import ApiClient
+    import zipfile
+    import io
+
+    def extract_zip_inmemory(http_obj, extr_idx=0):
+        filebytes = io.BytesIO(http_obj.data)
+        zip_inmem = zipfile.ZipFile(filebytes)
+        zip_names = list(sorted([name for name in zip_inmem.namelist()]))
+        if len(zip_names) <= extr_idx:
+            return None
+        return zip_inmem.read(zip_names[extr_idx])
+
+    def csv_to_json(inpcsv):
+        all_subm = {}
+        headers = []
+        for idx,l in enumerate(inpcsv.split('\n')):
+            vals = l.split(',')
+            if idx == 0:
+                headers = [v[0].lower()+v[1:] for v in vals] #mimick call to view where first character gests changed to lower case
+                continue
+            else:
+                append_dict = {headers[i]:v for i,v in enumerate(vals)}
+                if "submissionDate" in append_dict:
+                    append_dict["submissionTs"] = time.mktime(datetime.datetime.strptime(append_dict["submissionDate"].replace('"',''), "%Y-%m-%d %H:%M:%S").timetuple())
+
+                all_subm.setdefault(vals[0],[]).append(append_dict)
+        #only keep newest submission per team:
+        ret_subm = []
+        for s in all_subm.values():
+            if len(s) > 1:
+                s = sorted(s, key=lambda x: x['submissionTs'], reverse=True)
+            ret_subm.append(s[0])
+        return {"submissions":ret_subm}
 
 html_raw_postfix = "_raw"
 csv_raw_postfix = "_raw"
@@ -48,11 +80,15 @@ def save_html_dataset(url, trg_path, max_num_retries = 7):
                 if kaggle_api_obj is None:
                     kaggle_api_obj = KaggleApi(ApiClient())
                     kaggle_api_obj.authenticate()
-                resp_both = kaggle_api_obj.competition_view_leaderboard_with_http_info(id=url[len("kaggle://"):])
-                resp = ct.clean_dict_utf8(resp_both[0])
-                resp.update({'html_response':resp_both[1]})
+                resp_both = kaggle_api_obj.competition_download_leaderboard_with_http_info(id=url[len("kaggle://"):], _preload_content=False)
+                resbytes = extract_zip_inmemory(resp_both[0])
+                html_doc = resbytes.decode()
+                if html_doc[0] == '\ufeff':  # remove BOM
+                    html_doc = html_doc[1:]
+                json_doc = csv_to_json(html_doc)
+                resp = ct.clean_dict_utf8(json_doc)
                 with open(trg_path,'w') as json_outp:
-                    json.dump(resp, json_outp, ensure_ascii=False, indent=4)
+                   json.dump(resp, json_outp, ensure_ascii=False, indent=4)
                 return True
             requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning) #hide ubiquitous SSl Warnings 
             html_doc = requests.get(url, verify=False, timeout=25.0).text

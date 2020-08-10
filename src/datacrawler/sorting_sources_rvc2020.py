@@ -728,7 +728,7 @@ class sorting_kaggle_template(sorting_source_cl):
             get_vals[id0] = {self.column_id:id0}
             for key, val in f.items():
                 if key in self.keep_keys:
-                    get_vals[id0][version+"_"+key] = val
+                    get_vals[id0][version+"_"+key] = float(val)
         return get_vals
         
 class sorting_oid_objdet(sorting_kaggle_template):
