@@ -24,11 +24,13 @@ if 'KAGGLE_CONFIG_DIR' in os.environ:
         headers = []
         for idx,l in enumerate(inpcsv.split('\n')):
             vals = l.split(',')
+            if len(vals) < 1 or len(vals[0]) < 1:
+                continue
             if idx == 0:
                 headers = [v[0].lower()+v[1:] for v in vals] #mimick call to view where first character gests changed to lower case
                 continue
             else:
-                append_dict = {headers[i]:v for i,v in enumerate(vals)}
+                append_dict = {headers[i]:v.replace('"','') for i,v in enumerate(vals)}
                 if "submissionDate" in append_dict:
                     append_dict["submissionTs"] = time.mktime(datetime.datetime.strptime(append_dict["submissionDate"].replace('"',''), "%Y-%m-%d %H:%M:%S").timetuple())
 
