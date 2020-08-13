@@ -157,6 +157,8 @@ class sorting_source_cl:
                             val = val_br[sel_idx]
                             val = remove_tag(val,"span")
                             val = remove_tag(val,"b")
+                        if not val is None and '"/algorithms/' in val:
+                            val = remove_tag(val, "a")
             else:
                 pos_all = tde.pos
                 if not isinstance(tde.pos, list):
