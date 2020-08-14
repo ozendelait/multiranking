@@ -139,7 +139,7 @@ class sorting_mvd_objdet(sorting_source_codacsv):
 
 class sorting_mvd_semantics(sorting_source_codacsv):
     def base_url(self):
-        return "https://codalab.mapillary.com/competitions/43/results/68/data"
+        return "https://codalab.mapillary.com/competitions/43/results/69/data"
     def name(self):
         return "mvd_sem"
     def needs_sortings(self, version):
