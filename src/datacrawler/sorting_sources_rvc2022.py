@@ -67,34 +67,6 @@ class sorting_middlb_flow(sorting_source_cl):
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avrg_rnk", 1, "float", True, 1)]  # TODO: add scores from images
         
-class sorting_middlb_mvs(sorting_source_cl):
-    def base_url(self):
-        return "http://vision.middlebury.edu/mview/eval/pageDump.php"
-    def name(self):
-        return "middlb_mvs"
-    def get_rows(self, soup):
-        return None  # no standard <tr><td> schema but uses csv
-    def needs_sortings(self, version):
-        addrankings = []
-        for ds in ["Temple","Dino"]:
-            for var in ["Ring", "SparseRing", "Full"]:
-                for metr, sort_desc in [("c125", True), ("a90", False)]: #TODO: here one can use other thresholds as well
-                    addrankings.append((version+"_"+ds+var+"_"+metr, sort_desc))
-        return addrankings
-    def get_values(self, soup, version, line=-1):
-        rows = soup.contents[0].split('\n')
-        get_vals = {}
-        for idx, r in enumerate(rows):
-            if idx == 0 or len(r) < 5:
-                continue
-            v = r.split(',')
-            if len(v) < 5:
-                raise("Error: invalid row in mview pageDump.php: " + r)
-            get_vals.setdefault(v[1], {})[self.column_id] = v[1]
-            val_name = version+"_"+v[2] + "_"+ v[3]
-            get_vals[v[1]][val_name.replace(" ","")] = float(v[4])
-        return get_vals
-
 class sorting_source_codacsv(sorting_source_cl):
     def get_rows(self, soup):
         return None  # no standard <tr><td> schema but uses csv
@@ -144,46 +116,7 @@ class sorting_mvd_semantics(sorting_source_codacsv):
         return "mvd_sem"
     def needs_sortings(self, version):
         return [(version + "_" + metr, True) for metr in ["iou"]]
-
-class sorting_mvd_instance(sorting_source_codacsv):
-    def base_url(self):
-        return "https://codalab.mapillary.com/competitions/40/results/63/data"
-    def name(self):
-        return "mvd_inst"
-
-class sorting_mvd_panoptic(sorting_source_codacsv):
-    def base_url(self):
-        return "https://codalab.mapillary.com/competitions/42/results/67/data"
-    def name(self):
-        return "mvd_pano"
-    def needs_sortings(self, version):
-        return [(version + "_" + metr.lower().replace("_","-"), True) for metr in ["PQ","SQ","RQ"]] # these are emtpy on the leaderboard: "PQ_Things","SQ_Things","RQ_Things","PQ_Stuff","SQ_Stuff","RQ_Stuff"
-
-class sorting_hd1k_flow(sorting_source_cl):
-    def base_url(self):
-        return "http://hci-benchmark.org/api/scores.json/?challenges=rob_flow&limit=1000000&metrics={metrics}"
-    def name(self):
-        return "hd1k_f"
-    def formats(self):
-        return {"metrics" : {"bad_pix_01", "bad_pix_03", "bad_pix_10", "maha", "mee", "runtime", "sparsity", "bad_pix_01_discont", "bad_pix_03_discont", "bad_pix_10_discont"} }
-    def format_subset(self):
-        return {"metrics" : {"bad_pix_01", "bad_pix_03", "bad_pix_10", "maha", "mee", "bad_pix_01_discont", "bad_pix_03_discont", "bad_pix_10_discont"} }
-    def get_rows(self, soup): # no standard <tr><td> schema but uses json
-        return None
-    def needs_sortings(self, version):
-        val_name = version + "_val"
-        desc_sortings = {'hd1k_f-sparsity':True}
-        return [(val_name, desc_sortings.get(version,False))]
-    def get_values(self, soup, version, line=-1):
-        vals = json.loads(soup.text)
-        val_name = version + "_val" 
-        get_vals = {}
-        for f in vals["results"]:
-            if f["frame"] == "average_regular":
-                n_entry = {self.column_id:f["algorithm_display_name"], val_name: f["value"]}
-                get_vals[f["algorithm_display_name"]] = n_entry
-        return get_vals
-            
+ 
 class sorting_middlb_stereov3(sorting_source_cl):
     def base_url(self):
         return "http://vision.middlebury.edu/stereo/eval3/table.php?dbfile=../results3/results.db&type={type}&sparsity={sparsity}&stat={stat}&mask={mask}&hasInvalid=false&ids="
@@ -227,16 +160,6 @@ class sorting_scannet_semantics(sorting_source_cl):
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-iou", 2, "float", False, -1)]
     
-class sorting_scannet_instance(sorting_source_cl):
-    def base_url(self):
-        return "http://kaldir.vc.in.tum.de/scannet_benchmark/semantic_instance_2d"
-    def name(self):
-        return "scannet_inst"
-    def get_rows(self, soup):
-        return soup.find_all("table", class_="table-condensed")[0].find_all("tr")
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("avg-ag", 2, "float", False, -1)]
-
 class sorting_scannet_depth(sorting_source_cl):
     def base_url(self):
         return "http://dovahkiin.stanford.edu/adai"
@@ -258,29 +181,7 @@ class sorting_cityscapes_semantics(sorting_source_cl):
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("iou-class", 13, "float", False, -1), self.TDEntry("iiou-class", 14, "float", False, -1), 
                 self.TDEntry("iou-category", 15, "float", False, -1), self.TDEntry("iiou-category", 16, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
-
-class sorting_cityscapes_instance(sorting_source_cl):
-    def base_url(self):
-        return "https://www.cityscapes-dataset.com/benchmarks"
-    def name(self):
-        return "cityscapes_inst"
-    def get_rows(self, soup):
-        return soup.find("table", class_="tablepress-id-14").find_all("tr")
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("ap", 13, "float", False, -1), self.TDEntry("ap_50p", 14, "float", False, -1), 
-                self.TDEntry("ap_100m", 15, "float", False, -1), self.TDEntry("ap_50m", 16, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
-    
-class sorting_cityscapes_panoptic(sorting_source_cl):
-    def base_url(self):
-        return "https://www.cityscapes-dataset.com/benchmarks"
-    def name(self):
-        return "cityscapes_pan"
-    def get_rows(self, soup):
-        return soup.find("table", class_="tablepress-id-22").find_all("tr")
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("pq", 13, "float", False, -1), self.TDEntry("sq", 14, "float", False, -1), 
-                self.TDEntry("rq", 15, "float", False, -1), self.TDEntry("runtime", 17, "time", False)]
-    
+   
 class sorting_kitti2015_stereo(sorting_source_cl):
     def base_url(self):
         return "http://www.cvlibs.net/datasets/kitti/eval_scene_flow.php?benchmark=stereo&eval_gt={eval_gt}&eval_area={eval_area}"
@@ -358,18 +259,6 @@ class sorting_kitti_depth(sorting_source_cl):
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("si-log", 4, "float", False,1), self.TDEntry("sq-error-rel", 5, "float", False, 1),
                 self.TDEntry("abs-error-rel", 6, "float", False, 1), self.TDEntry("irmse", 7, "float", False, 1), self.TDEntry("runtime", 8, "time", False)]
-
-class sorting_kitti_semantics(sorting_source_cl):
-    def base_url(self):
-        return "http://www.cvlibs.net/datasets/kitti/eval_semseg.php?benchmark=semantics2015"
-    def name(self):
-        return "kitti_sem"
-    def get_rows(self, soup):
-        return soup.find("table", class_="results").find_all("tr")
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("iou-class", 4, "float", False, -1), 
-                self.TDEntry("iiou-class", 5, "float", False, -1), self.TDEntry("iou-category", 6, "float", False, -1), 
-                self.TDEntry("iiou-category", 7, "float", False,-1), self.TDEntry("runtime", 8, "time", False)]
 
 class sorting_kitti_instance(sorting_source_cl):
     def base_url(self):
@@ -516,28 +405,6 @@ class sorting_wilddash_prototype(sorting_source_cl):
         #            print("Warning: did not get values for id "+e+" for algorithm "+algo)
         return get_vals
 
-class sorting_wilddash2_instance(sorting_wilddash_prototype):
-    expect_suffix = "5"
-    def base_url(self):
-        return "https://wilddash.cc/api/scores.json/?challenges=instance_rob_2020&limit=1000000&frame_sets=summary_average_weighted"+self.expect_suffix+"&metrics={metrics}"
-    def name(self):
-        return "wilddash2_inst"
-    def formats(self):
-        return {"metrics" : {"ap2", "ap502"}}
-    def format_subset(self):
-        return  {"metrics" : {"ap2", "ap502"}}
-
-class sorting_wilddash2_panoptic(sorting_wilddash_prototype):
-    expect_suffix = "3"
-    def base_url(self):
-        return "https://wilddash.cc/api/scores.json/?challenges=panoptic_rob_2020&limit=1000000&frame_sets=summary_average"+self.expect_suffix+"&metrics={metrics}"
-    def name(self):
-        return "wilddash2_pano"
-    def formats(self):
-        return {"metrics" : {"pq", "category_pq"}}
-    def format_subset(self):
-        return {"metrics" : {"pq","category_pq"}}
-
 class sorting_wilddash2_semantics(sorting_wilddash_prototype):
     expect_suffix = "4"
     def base_url(self):
@@ -607,23 +474,6 @@ class sorting_viper_semantics(sorting_source_cl):
                 self.TDEntry("iou-night", 7, "float", False, -1),
                 self.TDEntry("runtime", 8, "time", False)]
 
-class sorting_viper_instance(sorting_source_cl):
-    def base_url(self):
-        return "https://playing-for-benchmarks.org/leaderboards/seg_inst_img/"
-    def name(self):
-        return "viper_inst"
-    def get_rows(self, soup):
-        return soup.find_all("table", class_="table-hover")[0].find_all("tr")
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 1, "string"), 
-                self.TDEntry("ap-all", 2, "float", False, -1),
-                self.TDEntry("ap-day", 3, "float", False, -1),
-                self.TDEntry("ap-sunset", 4, "float", False, -1),
-                self.TDEntry("ap-rain", 5, "float", False, -1),
-                self.TDEntry("ap-snow", 6, "float", False, -1),
-                self.TDEntry("ap-night", 7, "float", False, -1),
-                self.TDEntry("runtime", 8, "time", False)]
-
 class sorting_viper_flow(sorting_source_cl):
     def base_url(self):
         return "https://playing-for-benchmarks.org/leaderboards/flow_2d/"
@@ -679,7 +529,7 @@ class sorting_rabbitai_depth(sorting_source_cl):
 
 class sorting_coco_objdet(sorting_source_codacsv):
     def base_url(self):
-        return "https://competitions.codalab.org/competitions/25334/results/41626/data"
+        return "https://codalab.lisn.upsaclay.fr/competitions/6420/results/9498/data"
     def name(self):
         return "coco_obj"
     def needs_sortings(self, version):
@@ -690,22 +540,6 @@ class sorting_coco_semantics(sorting_source_codacsv):
         return None
     def name(self):
         return "coco_sem"
-    def needs_sortings(self, version):
-        return [(version + "_" + metr.lower().replace(" ","-"), True) for metr in ["PQ", "SQ", "RQ", "PQ Things", "SQ Things", "RQ Things", "PQ Stuff", "SQ Stuff", "RQ Stuff"]]
-
-class sorting_coco_instance(sorting_source_codacsv):
-    def base_url(self):
-        return "https://competitions.codalab.org/competitions/25388/results/41715/data"
-    def name(self):
-        return "coco_inst"
-    def needs_sortings(self, version):
-        return [(version + "_" + metr.lower().replace(" ","-").replace("=","-"), True) for metr in ["AP", "AP IoU=.50", "AP IoU=.75", "AP large", "AP medium", "AP small", "AR large", "AR max=1", "AR max=10", "AR max=100", "AR medium", "AR small"]]
-
-class sorting_coco_panoptic(sorting_source_codacsv):
-    def base_url(self):
-        return "https://competitions.codalab.org/competitions/25386/results/41712/data"
-    def name(self):
-        return "coco_pano"
     def needs_sortings(self, version):
         return [(version + "_" + metr.lower().replace(" ","-"), True) for metr in ["PQ", "SQ", "RQ", "PQ Things", "SQ Things", "RQ Things", "PQ Stuff", "SQ Stuff", "RQ Stuff"]]
 
@@ -743,16 +577,14 @@ class sorting_oid_instance(sorting_kaggle_template):
     def name(self):
         return "oid_inst"
 
-def get_all_sources_rvc2020():
+def get_all_sources_rvc2022():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_viper_flow() ]
     all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
-    all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_kitti_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_instance_sources = [sorting_cityscapes_instance(), sorting_kitti_instance(), sorting_wilddash2_instance(), sorting_viper_instance(), sorting_scannet_instance(), sorting_coco_instance(), sorting_mvd_instance(), sorting_oid_instance()]
-    all_panoptic_sources = [sorting_cityscapes_panoptic(), sorting_coco_panoptic(), sorting_wilddash2_panoptic(), sorting_mvd_panoptic(), sorting_viper_panoptic()]
+    all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
                    ("objdet", all_objdet_sources), 
-                   ("semantic", all_semantic_sources), ("instance", all_instance_sources), ("panoptic", all_panoptic_sources)]
+                   ("semantic", all_semantic_sources)]
     return all_sources
     

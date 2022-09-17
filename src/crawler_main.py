@@ -15,7 +15,7 @@ if __name__ == "__main__":
     fake_incomplete_rank = 4096 # rank used in csv for incomplete submissions
 
     name_joined_rank = "joined_"+dc.rank_prefix
-    all_sources = dc.get_all_sources_rvc2020()
+    all_sources = dc.get_all_sources_rvc2022()
     #all_sources = [("flow", [dc.sorting_middlb_flow(), dc.sorting_kitti2015_flow(), dc.sorting_sintel_flow(), dc.sorting_viper_flow()])]
     #all_sources += [("stereo", [dc.sorting_eth3d_stereo(), dc.sorting_middlb_stereov3(), dc.sorting_kitti2015_stereo()])]
     #all_sources += [("depth", [dc.sorting_kitti_depth(), dc.sorting_rabbitai_depth(), dc.sorting_viper_depth(), dc.sorting_sintel_depth()])]
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         if not d is None and not os.path.exists(d):
             os.makedirs(d)
     
-    rclogger = dc.setup_logging(tmp_dir+'/robcrawler.log')
+    rclogger = dc.setup_logging(tmp_dir+'/rvccrawler.log')
     rclogger.info("Started crawler, tmp_dir: %s, res_dir: %s, archive_dir: %s ", tmp_dir, res_dir, archive_dir)
     
     #first download all resources
