@@ -15,7 +15,6 @@
 
 from copy import copy
 import random
-import types
 
 
 # This class provides tie breaking methods
@@ -25,7 +24,7 @@ class TieBreaker(object):
     def __init__(self, candidate_range):
         self.ties_broken = False
         self.random_ordering = list(candidate_range)
-        if not isinstance(candidate_range, types.ListType):
+        if not isinstance(candidate_range, list):
             random.shuffle(self.random_ordering)
 
     #
@@ -34,7 +33,7 @@ class TieBreaker(object):
         random_ordering = copy(self.random_ordering)
         if reverse:
             random_ordering.reverse()
-        if getattr(list(tied_candidates)[0], '__iter__', False):
+        if not isinstance(list(tied_candidates)[0], str) and getattr(list(tied_candidates)[0], '__iter__', False):
             result = self.break_complex_ties(tied_candidates, random_ordering)
         else:
             result = self.break_simple_ties(tied_candidates, random_ordering)

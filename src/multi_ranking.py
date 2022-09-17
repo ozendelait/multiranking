@@ -5,6 +5,14 @@ from pyvotecore import condorcet
 #from sklearn.metrics import ranking
 
 logging.basicConfig(level=logging.INFO)
+
+def ballot_to_str(input_rankings):
+    ret_str = ""
+    for i in input_rankings:
+        rstr = [("=".join(same_rank)).replace('_','').replace('-','').lower() for same_rank in i["ballot"]] #ties
+        ret_str += ">".join(rstr) + "*%i\n"%i.get("count",1)
+    return ret_str
+
 def iterative_schulz(input_rankings, num_per_iter, max_calc = -1, tie_breakers=None, rclogger = None):
     if rclogger is None:
         rclogger = logging.getLogger(__name__)
@@ -175,7 +183,7 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
         return []        
     
     tie_breaker_score = {}
-    for name, list_of_lists in method_rankings.iteritems():
+    for name, list_of_lists in method_rankings.items():
         curr_weight = weight_p_ranking.get(name,1)
         for idx,list_m in enumerate(list_of_lists):
             for m in list_m: #these share the same place
@@ -187,11 +195,18 @@ def get_joined_ranking(inp_data, refid, ranking_names, batchsize = 10, max_calc 
     tie_breakers = [i[0] for i in ranking_ties]
     
     input_rankings = copy.deepcopy(list(all_rankings.values()))
+
+    #print(";".join([r[0].replace('_','').replace('-','').lower() for r in ranking_ties]))
+    #print(ballot_to_str(input_rankings))
+
+    #uncomment this line to remove tie breakers
+    #tie_breaker_score, tie_breakers = None, None
+
     if batchsize <= 0:
         #original SchulzePR call, this can take very long for larger numbers of methods
-        rclogger.info("Calling original SchulzePR code with %i candidates and %i possible rankings %i" , len(tie_breakers) , len(input_rankings))
+        rclogger.info("Calling original SchulzePR code with %i candidates and %i possible rankings" , len(ranking_ties) , len(input_rankings))
         multi_ranking = schulze_pr.SchulzePR(input_rankings, ballot_notation=condorcet.CondorcetHelper.BALLOT_NOTATION_GROUPING,tie_breaker=tie_breakers).as_dict()["order"]
     else:
         #iterative version of SchulzePR, only correct for the first batch of max_order_calc entries, after this the results can diverge from the Schulze-Method-Equivalent
-        multi_ranking = iterative_schulz(input_rankings, min(len(tie_breaker_score), batchsize), max_calc, tie_breaker_score, rclogger = rclogger)
+        multi_ranking = iterative_schulz(input_rankings, min(len(ranking_ties), batchsize), max_calc, tie_breaker_score, rclogger = rclogger)
     return multi_ranking

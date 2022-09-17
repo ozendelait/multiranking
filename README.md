@@ -11,3 +11,4 @@ Use this example file to understand the common functionality of the web-crawler 
 Dependencies (can be installed via pip):
 python-graph-core >= 1.8.0
 beautifulsoup4 >= 4.4.0
+requests >= 2.18.0

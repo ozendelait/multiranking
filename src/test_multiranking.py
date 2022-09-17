@@ -32,7 +32,7 @@ if __name__ == "__main__":
             continue
         actual_result_name = 'compare_'+expected_result_name
         res_csv = dc.add_new_ranking(inp_csv, dc.column_id, actual_result_name, res)
-        for name, vals in res_csv.iteritems():
+        for name, vals in res_csv.items():
             if expected_result_name in vals:
                 if not actual_result_name in vals:
                     rclogger.error('Did not find result rank for row '+name+' of '+t)

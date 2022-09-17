@@ -1,5 +1,4 @@
-import datetime, logging
-
+import datetime, logging, io, os
 logging.basicConfig(level=logging.INFO)
 
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -7,6 +6,25 @@ def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
 def unix_time_now():
     return unix_time_millis(datetime.datetime.now())
+
+def clean_val_utf8(inp_val, prev_endless=4):
+    if prev_endless <= 0:
+        return inp_val
+    if isinstance(inp_val,dict):
+        return clean_dict_utf8(inp_val, prev_endless-1)
+    elif isinstance(inp_val,list):
+        return [clean_val_utf8(v, prev_endless-1) for v in inp_val]
+    elif isinstance(inp_val,str):
+        return inp_val.encode("utf-8").decode("ascii", "backslashreplace")
+    return inp_val
+    
+def clean_dict_utf8(inp_dict, prev_endless=4):
+    if prev_endless <= 0:
+        return inp_dict
+    cleaned_dict = {}
+    for key, val in inp_dict.items():
+        cleaned_dict[key] = clean_val_utf8(val, prev_endless)
+    return cleaned_dict
 
 # this method requires a header row to work
 def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None):
@@ -20,7 +38,7 @@ def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None
     all_vals = {}
 
     try:
-        with open(csv_path, 'rb') as inp_file:
+        with io.open(csv_path, 'r', encoding="utf8", newline='\n') as inp_file:
             all_lines = inp_file.readlines()
     except Exception as e:
         rclogger.error("Could not read csv file " + csv_path + "Exception: "+ str(e))
@@ -72,7 +90,7 @@ def load_from_csv(csv_path, column_id="method", order_name=None, rclogger = None
 
 def get_all_keys(all_vals):
     all_keys = set()
-    for _, vals in all_vals.iteritems():
+    for _, vals in all_vals.items():
         all_keys |= set(vals.keys())
     return sorted(list(all_keys))
 
@@ -102,14 +120,16 @@ def get_headers_from_keys(src, column_id="method", keys=[], version = None, use_
             headers.append(k)
     return headers + src_list
 
-def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None):
+def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None, column_id="method"):
     seperator = ';'
     repl_seperator = '%3B'
+
+    col_id_to_key = {vals[column_id]: key0 for key0, vals in all_vals.items() if column_id in vals}  # support fuzzy mixed case comparisions
 
     if not order_name is None and not order_name in header_list:
         header_list = [order_name] + header_list
     
-    with open(res_file, 'wb') as outfile:
+    with io.open(res_file, 'w', encoding="utf8", newline='\n') as outfile:
         outfile.write('"sep=' + seperator + '"\n')
         for header in header_list:
             outfile.write('%s;' % str(header))
@@ -120,6 +140,8 @@ def save_as_csv(header_list, subset_ranking, all_vals, res_file, order_name=None
             if not isinstance(methods, list):
                 methods = [methods]
             for method in methods:
+                if not method in all_vals and method in col_id_to_key:
+                    method = col_id_to_key[method]
                 if not method in all_vals:
                     continue
                 for entry in header_list:
@@ -152,18 +174,25 @@ def res_name_fuzzy_cmp(id0, allow_fuzzy_namecmp):
 def n_lower_chars(string):
     return sum(1 for c in str(string) if c.islower())
     
-def join_csv_files(csv_paths, column_id, rclogger = None, allow_fuzzy_namecmp = 0):
+def join_csv_files(csv_paths, column_id, rclogger = None, allow_fuzzy_namecmp = 0, renaming_methods={}):
     if rclogger is None:
         rclogger = logging.getLogger(__name__)
     
     all_vals = {}
     for csv_path in csv_paths:
         vals_csv = load_from_csv(csv_path, column_id= column_id, order_name=None, rclogger = rclogger)
-        for id0_orig, vals in vals_csv.iteritems():
+        source_name = os.path.basename(csv_path).replace('_raw','').split('.')[0].split('-')[0]
+        renamings = renaming_methods.get(source_name,{})
+        for id0_orig, vals in vals_csv.items():
+            if id0_orig in renamings:
+                id0_orig = renamings[id0_orig]
             id0 = res_name_fuzzy_cmp(id0_orig,allow_fuzzy_namecmp)
+            if id0 in renamings:
+                id0 = renamings[id0]
+                id0_orig = id0
             vals[column_id] = id0_orig
             if id0 in all_vals:
-                for name, val in vals.iteritems():
+                for name, val in vals.items():
                     old_val = None
                     if name in all_vals[id0]:
                         old_val = all_vals[id0][name]
