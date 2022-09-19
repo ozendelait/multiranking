@@ -73,6 +73,8 @@ class sorting_source_codacsv(sorting_source_cl):
     def needs_sortings(self, version): #works for obj and inst
         return [(version + "_" + metr, True) for metr in ["ap","ap-50","ap-75"]]
     def get_values(self, soup, version, line=-1):
+        if len(soup.contents) == 0:
+            return {}
         rows = soup.contents[0]
         if not isinstance(rows,str) or (sys.version[0] == 2 and not isinstance(rows, basestring)):
             return {}
@@ -104,14 +106,14 @@ class sorting_source_codacsv(sorting_source_cl):
         return get_vals
 
 class sorting_mvd_objdet(sorting_source_codacsv):
-    def base_url(self):
-        return "https://codalab.mapillary.com/competitions/41/results/65/data"
+    def base_url(self): #todo: this is sem. val; needs obj.det. test!
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8771/data"
     def name(self):
         return "mvd_obj"
 
 class sorting_mvd_semantics(sorting_source_codacsv):
-    def base_url(self):
-        return "https://codalab.mapillary.com/competitions/43/results/69/data"
+    def base_url(self): #todo: this is val; needs test!
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8771/data"
     def name(self):
         return "mvd_sem"
     def needs_sortings(self, version):
@@ -583,8 +585,9 @@ def get_all_sources_rvc2022():
     all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
     all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources),
-                   ("objdet", all_objdet_sources), 
-                   ("semantic", all_semantic_sources)]
+    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources), ("semantic", all_semantic_sources)
+                   # obj. det. leaderboards need fixing
+                   #("objdet", all_objdet_sources)
+                   ]
     return all_sources
     

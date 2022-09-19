@@ -4,7 +4,16 @@ from bs4 import BeautifulSoup
 import requests, os, codecs, logging, json, time, datetime
 from . import csv_tools as ct
 
+crawler_kaggle_support = False
 if 'KAGGLE_CONFIG_DIR' in os.environ:
+    try:
+        from kaggle.api.kaggle_api_extended import KaggleApi
+        from kaggle.api_client import ApiClient
+        crawler_kaggle_support = True
+    except:
+        pass
+
+if crawler_kaggle_support:
     # make sure to set the environment variable KAGGLE_CONFIG_DIR correctly and place kaggle.json there
     from kaggle.api.kaggle_api_extended import KaggleApi
     from kaggle.api_client import ApiClient
