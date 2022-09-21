@@ -106,14 +106,14 @@ class sorting_source_codacsv(sorting_source_cl):
         return get_vals
 
 class sorting_mvd_objdet(sorting_source_codacsv):
-    def base_url(self): #todo: this is sem. val; needs obj.det. test!
-        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8771/data"
+    def base_url(self): 
+        return "https://codalab.lisn.upsaclay.fr/competitions/7515/results/12355/data"
     def name(self):
         return "mvd_obj"
 
 class sorting_mvd_semantics(sorting_source_codacsv):
-    def base_url(self): #todo: this is val; needs test!
-        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8771/data"
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8772/data"
     def name(self):
         return "mvd_sem"
     def needs_sortings(self, version):
@@ -569,24 +569,20 @@ class sorting_kaggle_template(sorting_source_cl):
         
 class sorting_oid_objdet(sorting_kaggle_template):
     def base_url(self):
-        return "kaggle://open-images-object-detection-rvc-2020"
+        return "kaggle://open-images-object-detection-rvc-2022-edition"
     def name(self):
         return "oid_obj"         
-
-class sorting_oid_instance(sorting_kaggle_template):
-    def base_url(self):
-        return "kaggle://open-images-instance-segmentation-rvc-2020"
-    def name(self):
-        return "oid_inst"
 
 def get_all_sources_rvc2022():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_viper_flow() ]
-    all_depth_sources = [sorting_kitti_depth(), sorting_rabbitai_depth(), sorting_viper_depth(), sorting_sintel_depth()]
+    all_depth_sources = [sorting_kitti_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
     all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("depth", all_depth_sources), ("semantic", all_semantic_sources)
-                   # obj. det. leaderboards need fixing
+    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources)
+                   # only scale-invariant metrics allowed -> check again
+                   #("depth", all_depth_sources),
+                   # some obj. det. leaderboards need fixing/visibility changes 
                    #("objdet", all_objdet_sources)
                    ]
     return all_sources

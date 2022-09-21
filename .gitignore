@@ -107,3 +107,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+#temporary debugging files
+_*
+
+#vscode files
+.vscode/*
