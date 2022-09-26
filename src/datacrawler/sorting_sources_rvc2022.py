@@ -579,9 +579,9 @@ def get_all_sources_rvc2022():
     all_depth_sources = [sorting_kitti_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
     all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources)
+    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources),
                    # only scale-invariant metrics allowed -> check again
-                   #("depth", all_depth_sources),
+                   ("depth", all_depth_sources),
                    # some obj. det. leaderboards need fixing/visibility changes 
                    #("objdet", all_objdet_sources)
                    ]
