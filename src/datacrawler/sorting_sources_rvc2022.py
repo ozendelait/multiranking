@@ -33,11 +33,7 @@ class sorting_sintel_depth(sorting_source_cl):
         return all_tr
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 0, "string"), self.TDEntry("SILog_final", 1, "float", True, 1),
-                self.TDEntry("SqErrorRel_final", 2, "float", True, 1),
-                self.TDEntry("AbsErrorRel_final", 3, "float", True, 1),
                 self.TDEntry("iRMSE_final", 4, "float", True, 1), self.TDEntry("SILog_clean", 5, "float", True, 1),
-                self.TDEntry("SqErrorRel_clean", 6, "float", True, 1),
-                self.TDEntry("AbsErrorRel_clean", 7, "float", True, 1),
                 self.TDEntry("iRMSE_clean", 8, "float", True, 1)]
 
 class sorting_middlb_flow(sorting_source_cl):
@@ -104,20 +100,6 @@ class sorting_source_codacsv(sorting_source_cl):
                     get_vals[v[column_idx]][self.rank_prefix+"_"+val_name] = int(val_corr[1].split(')')[0])
 
         return get_vals
-
-class sorting_mvd_objdet(sorting_source_codacsv):
-    def base_url(self): 
-        return "https://codalab.lisn.upsaclay.fr/competitions/7515/results/12355/data"
-    def name(self):
-        return "mvd_obj"
-
-class sorting_mvd_semantics(sorting_source_codacsv):
-    def base_url(self):
-        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8772/data"
-    def name(self):
-        return "mvd_sem"
-    def needs_sortings(self, version):
-        return [(version + "_" + metr, True) for metr in ["iou"]]
  
 class sorting_middlb_stereov3(sorting_source_cl):
     def base_url(self):
@@ -259,8 +241,8 @@ class sorting_kitti_depth(sorting_source_cl):
     def get_rows(self, soup):
         return soup.find("table", class_="results").find_all("tr")
     def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("si-log", 4, "float", False,1), self.TDEntry("sq-error-rel", 5, "float", False, 1),
-                self.TDEntry("abs-error-rel", 6, "float", False, 1), self.TDEntry("irmse", 7, "float", False, 1), self.TDEntry("runtime", 8, "time", False)]
+        return [self.TDEntry(self.column_id, 1, "string"), self.TDEntry("si-log", 4, "float", False,1),
+                self.TDEntry("irmse", 7, "float", False, 1), self.TDEntry("runtime", 8, "time", False)]
 
 class sorting_kitti_instance(sorting_source_cl):
     def base_url(self):
@@ -455,7 +437,6 @@ class sorting_viper_depth(sorting_source_cl):
     def get_relevant_td(self, version="", line=-1):
         return [self.TDEntry(self.column_id, 1, "string"),
                 self.TDEntry("si-log", 2, "float", False, 1),
-                self.TDEntry("abs-error-rel", 3, "float", False, 1),
                 self.TDEntry("irmse", 4, "float", False, 1),
                 self.TDEntry("runtime", 5, "time", False)]
 
@@ -529,7 +510,7 @@ class sorting_rabbitai_depth(sorting_source_cl):
                 self.TDEntry("abs-rel", 11, "percentage", False, 1),
                 self.TDEntry("inv-rmse", 12, "float", False, 1)]
 
-class sorting_coco_objdet(sorting_source_codacsv):
+class sorting_coco_objdet_csv(sorting_source_codacsv):
     def base_url(self):
         return "https://codalab.lisn.upsaclay.fr/competitions/6420/results/9498/data"
     def name(self):
@@ -537,13 +518,52 @@ class sorting_coco_objdet(sorting_source_codacsv):
     def needs_sortings(self, version):
         return [(version + "_" + metr, True) for metr in ["ap","ap-50","ap-75","ap-l","ap-m","ap-s","ar-l","ar-m1","ar-max10","ar-max100","ar-m","ar-s"]]
 
-class sorting_coco_semantics(sorting_source_codacsv):
+class sorting_coco_semantics_csv(sorting_source_codacsv):
     def base_url(self):
         return None
     def name(self):
         return "coco_sem"
     def needs_sortings(self, version):
         return [(version + "_" + metr.lower().replace(" ","-"), True) for metr in ["PQ", "SQ", "RQ", "PQ Things", "SQ Things", "RQ Things", "PQ Stuff", "SQ Stuff", "RQ Stuff"]]
+
+class sorting_mvd_objdet_csv(sorting_source_codacsv):
+    def base_url(self): 
+        return "https://codalab.lisn.upsaclay.fr/competitions/7515/results/12355/data"
+    def name(self):
+        return "mvd_obj"
+
+class sorting_mvd_semantics_csv(sorting_source_codacsv):
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821/results/8772/data"
+    def name(self):
+        return "mvd_sem"
+    def needs_sortings(self, version):
+        return [(version + "_" + metr, True) for metr in ["iou"]]
+
+class sorting_coco_objdet(sorting_coda_score):
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821#results"
+    def name(self):
+        return "coco_obj"
+
+class sorting_mvd_semantics(sorting_coda_score):
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821#results"
+    def name(self):
+        return "mvd_sem"
+
+class sorting_mvd_objdet(sorting_coda_score):
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/7515#results"
+    def name(self):
+        return "mvd_obj"
+
+class sorting_coda_score(sorting_source_cl):
+    def get_rows(self, soup):
+        return soup.find("table", class_="table").find_all("tr")[1:]
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"), 
+                            self.TDEntry("score", 2, "float", False,-1),self.TDEntry("oldpos", 0, "int", False)]
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
