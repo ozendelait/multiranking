@@ -540,9 +540,16 @@ class sorting_mvd_semantics_csv(sorting_source_codacsv):
     def needs_sortings(self, version):
         return [(version + "_" + metr, True) for metr in ["iou"]]
 
+class sorting_coda_score(sorting_source_cl):
+    def get_rows(self, soup):
+        return soup.find("table", class_="table").find_all("tr")[1:]
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"), 
+                            self.TDEntry("score", 2, "float", False,-1),self.TDEntry("oldpos", 0, "int", False)]
+
 class sorting_coco_objdet(sorting_coda_score):
     def base_url(self):
-        return "https://codalab.lisn.upsaclay.fr/competitions/5821#results"
+        return "https://codalab.lisn.upsaclay.fr/competitions/6420#results"
     def name(self):
         return "coco_obj"
 
@@ -557,13 +564,6 @@ class sorting_mvd_objdet(sorting_coda_score):
         return "https://codalab.lisn.upsaclay.fr/competitions/7515#results"
     def name(self):
         return "mvd_obj"
-
-class sorting_coda_score(sorting_source_cl):
-    def get_rows(self, soup):
-        return soup.find("table", class_="table").find_all("tr")[1:]
-    def get_relevant_td(self, version="", line=-1):
-        return [self.TDEntry(self.column_id, 1, "string"), 
-                            self.TDEntry("score", 2, "float", False,-1),self.TDEntry("oldpos", 0, "int", False)]
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
@@ -602,8 +602,7 @@ def get_all_sources_rvc2022():
     all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources),
                    # only scale-invariant metrics allowed -> check again
                    ("depth", all_depth_sources),
-                   # some obj. det. leaderboards need fixing/visibility changes 
-                   #("objdet", all_objdet_sources)
+                   ("objdet", all_objdet_sources)
                    ]
     return all_sources
     
