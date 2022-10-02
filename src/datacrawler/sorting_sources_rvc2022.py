@@ -547,23 +547,68 @@ class sorting_coda_score(sorting_source_cl):
         return [self.TDEntry(self.column_id, 1, "string"), 
                             self.TDEntry("score", 2, "float", False,-1),self.TDEntry("oldpos", 0, "int", False)]
 
-class sorting_coco_objdet(sorting_coda_score):
+class sorting_coco_objdet_html(sorting_coda_score):
     def base_url(self):
         return "https://codalab.lisn.upsaclay.fr/competitions/6420#results"
     def name(self):
         return "coco_obj"
 
-class sorting_mvd_semantics(sorting_coda_score):
+class sorting_mvd_semantics_html(sorting_coda_score):
     def base_url(self):
         return "https://codalab.lisn.upsaclay.fr/competitions/5821#results"
     def name(self):
         return "mvd_sem"
 
-class sorting_mvd_objdet(sorting_coda_score):
+class sorting_mvd_objdet_html(sorting_coda_score):
     def base_url(self):
         return "https://codalab.lisn.upsaclay.fr/competitions/7515#results"
     def name(self):
         return "mvd_obj"
+
+class sorting_coda_json(sorting_source_cl):
+    algo_disp_name = "username"
+    keep_keys = ['ignoreScore']
+    def base_url(self):
+        return None
+    def get_rows(self, soup): # no standard <tr><td> schema but uses json
+        return None
+    def needs_sortings(self, version):
+        return [(version+'_'+k, True) for k in self.keep_keys]
+    def get_values(self, soup, version, line=-1):
+        vals = json.loads(soup.text)
+        get_vals = {}
+        for f0 in vals[0]["scores"]:
+            f = f0[1] 
+            if not self.algo_disp_name in f.keys():
+                continue
+            id0 = f[self.algo_disp_name]
+            get_vals[id0] = {self.column_id:id0}
+            for v in f['values']:
+                key, val = v['name'].lower(), v['val'] 
+                if key in self.keep_keys:
+                    get_vals[id0][version+"_"+key] = float(val)
+        return get_vals
+
+class sorting_mvd_objdet(sorting_coda_json):
+    keep_keys = ['ap', 'ap_50', 'ap_75']
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/api/competition/7515/phases/1/leaderboard/data?format=json"
+    def name(self):
+        return "mvd_obj"
+
+class sorting_coco_objdet(sorting_coda_json):
+    keep_keys = ['ap', 'ap_50', 'ap_75', 'ap_large', 'ap_medium', 'ap_small', 'ar_large', 'ar_medium', 'ar_small', 'ar_max_1', 'ar_max_10', 'ar_max_100']
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/api/competition/6420/phases/3/leaderboard/data?format=json"
+    def name(self):
+        return "coco_obj"
+
+class sorting_mvd_semantics(sorting_coda_json):
+    keep_keys = ['iou']
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/api/competition/5821/phases/1/leaderboard/data?format=json"
+    def name(self):
+        return "mvd_sem"
 
 class sorting_kaggle_template(sorting_source_cl):
     algo_disp_name = "teamName"
