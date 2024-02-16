@@ -573,17 +573,31 @@ class sorting_oid_objdet(sorting_kaggle_template):
     def name(self):
         return "oid_obj"         
 
+class sorting_coda_semantics(sorting_source_cl):
+    def base_url(self):
+        return "https://codalab.lisn.upsaclay.fr/competitions/5821#results"
+    def name(self):
+        return "coda_sem"
+    def get_rows(self, soup):
+        return soup.find("table", class_="table").find_all("tr")[1:]
+    def get_relevant_td(self, version="", line=-1):
+        return [self.TDEntry(self.column_id, 1, "string"), 
+                            self.TDEntry("score", 2, "float", False,-1),self.TDEntry("oldpos", 0, "int", False)]
+
+
 def get_all_sources_rvc2022():
     all_stereo_sources = [sorting_eth3d_stereo(), sorting_middlb_stereov3(),  sorting_kitti2015_stereo()]
     all_flow_sources = [sorting_middlb_flow(), sorting_kitti2015_flow(), sorting_sintel_flow(), sorting_viper_flow() ]
     all_depth_sources = [sorting_kitti_depth(), sorting_viper_depth(), sorting_sintel_depth()]
     all_objdet_sources = [sorting_oid_objdet(), sorting_coco_objdet(), sorting_mvd_objdet()]
     all_semantic_sources = [sorting_ade20k_semantics(),  sorting_cityscapes_semantics(), sorting_mvd_semantics(), sorting_scannet_semantics(), sorting_viper_semantics(), sorting_wilddash2_semantics()]
-    all_sources = [("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources)
+    codalab_check = [sorting_coda_semantics()]
+    all_sources = [#("stereo", all_stereo_sources), ("flow", all_flow_sources), ("semantic", all_semantic_sources)
                    # only scale-invariant metrics allowed -> check again
                    #("depth", all_depth_sources),
                    # some obj. det. leaderboards need fixing/visibility changes 
                    #("objdet", all_objdet_sources)
+                   ("coda", codalab_check)
                    ]
     return all_sources
     
